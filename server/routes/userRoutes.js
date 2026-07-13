@@ -7,7 +7,8 @@ const {
     getProfile,
     updateProfile,
     uploadProfilePhoto,
-    getUsers
+    getUsers,
+    getDashboardStats
 } = require("../controllers/userController");
 
 const protect = require("../middleware/authMiddleware");
@@ -40,8 +41,19 @@ router.post("/login", loginUser);
 // Get Logged-in User Profile
 router.get("/profile", protect, getProfile);
 
+// Dashboard Statistics
+router.get(
+    "/dashboard-stats",
+    protect,
+    getDashboardStats
+);
+
 // Update User Profile
-router.put("/profile", protect, updateProfile);
+router.put(
+    "/profile",
+    protect,
+    updateProfile
+);
 
 // Upload Profile Photo
 router.put(
@@ -52,6 +64,10 @@ router.put(
 );
 
 // Discover Other Users
-router.get("/discover", protect, getUsers);
+router.get(
+    "/discover",
+    protect,
+    getUsers
+);
 
 module.exports = router;

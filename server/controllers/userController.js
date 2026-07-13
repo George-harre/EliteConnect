@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Like = require("../models/Like");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -51,6 +52,7 @@ const registerUser = async (req, res) => {
 // ===============================
 const loginUser = async (req, res) => {
     try {
+
         const { email, password } = req.body;
 
         // Find user
@@ -63,7 +65,10 @@ const loginUser = async (req, res) => {
         }
 
         // Compare password
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(
+            password,
+            user.password
+        );
 
         if (!isMatch) {
             return res.status(400).json({
@@ -71,7 +76,7 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // Generate JWT Token
+        // Generate JWT
         const token = jwt.sign(
             {
                 id: user._id,
@@ -95,21 +100,33 @@ const loginUser = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
 };
 
+// ===============================
+// Get Logged-in User Profile
+// ===============================
 const getProfile = async (req, res) => {
+
     res.status(200).json({
         message: "Profile loaded successfully.",
         user: req.user
     });
+
 };
 
+// ===============================
+// Update Profile
+// ===============================
 const updateProfile = async (req, res) => {
+
     try {
+
         const user = await User.findById(req.user._id);
 
         if (!user) {
@@ -150,12 +167,20 @@ const updateProfile = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
+
 };
+
+// ===============================
+// Upload Profile Photo
+// ===============================
 const uploadProfilePhoto = async (req, res) => {
+
     try {
 
         const user = await User.findById(req.user._id);
@@ -182,17 +207,20 @@ const uploadProfilePhoto = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
+
 };
 
-
 // ===============================
-// Discover Users with Filters
+// Discover Users
 // ===============================
 const getUsers = async (req, res) => {
+
     try {
 
         const {
@@ -223,6 +251,7 @@ const getUsers = async (req, res) => {
         }
 
         if (minAge || maxAge) {
+
             filters.age = {};
 
             if (minAge) {
@@ -232,9 +261,11 @@ const getUsers = async (req, res) => {
             if (maxAge) {
                 filters.age.$lte = Number(maxAge);
             }
+
         }
 
-        const users = await User.find(filters).select("-password");
+        const users = await User.find(filters)
+            .select("-password");
 
         res.status(200).json({
             message: "Users loaded successfully.",
@@ -243,11 +274,15 @@ const getUsers = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
+
 };
+
 // ===============================
 // Smart Match Discovery
 // ===============================
@@ -261,13 +296,10 @@ const getMatches = async (req, res) => {
             _id: { $ne: currentUser._id }
         }).select("-password");
 
-
         const matches = users.map(user => {
 
             let score = 0;
 
-
-            // Same location
             if (
                 currentUser.location &&
                 currentUser.location === user.location
@@ -275,8 +307,6 @@ const getMatches = async (req, res) => {
                 score += 25;
             }
 
-
-            // Same relationship goal
             if (
                 currentUser.relationshipGoal &&
                 currentUser.relationshipGoal === user.relationshipGoal
@@ -284,8 +314,6 @@ const getMatches = async (req, res) => {
                 score += 25;
             }
 
-
-            // Common interests
             if (
                 currentUser.interests &&
                 user.interests
@@ -294,12 +322,12 @@ const getMatches = async (req, res) => {
                 const common =
                     currentUser.interests.filter(
                         interest =>
-                        user.interests.includes(interest)
+                            user.interests.includes(interest)
                     );
 
                 score += common.length * 10;
-            }
 
+            }
 
             return {
                 user,
@@ -308,29 +336,84 @@ const getMatches = async (req, res) => {
 
         });
 
-
         matches.sort(
-            (a,b) =>
-            b.compatibilityScore -
-            a.compatibilityScore
+            (a, b) =>
+                b.compatibilityScore -
+                a.compatibilityScore
         );
 
-
         res.status(200).json({
-            message:"Matches generated successfully",
+            message: "Matches generated successfully",
             matches
         });
 
-
-    } catch(error){
+    } catch (error) {
 
         res.status(500).json({
-            message:error.message
+            message: error.message
         });
 
     }
 
 };
+
+// ===============================
+// Dashboard Statistics
+// ===============================
+const getDashboardStats = async (req, res) => {
+
+    try {
+
+        const userId = req.user._id;
+
+        // Total Likes Received
+        const likesReceived = await Like.countDocuments({
+            receiver: userId
+        });
+
+        // Likes Sent
+        const likesSent = await Like.find({
+            sender: userId
+        });
+
+        // Mutual Matches
+        let matches = 0;
+
+        for (const like of likesSent) {
+
+            const mutualLike = await Like.findOne({
+                sender: like.receiver,
+                receiver: userId
+            });
+
+            if (mutualLike) {
+                matches++;
+            }
+
+        }
+
+        res.status(200).json({
+
+            likesReceived,
+
+            matches,
+
+            messages: 0,
+
+            profileViews: 0
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+};
+
 // ===============================
 // Export Controllers
 // ===============================
@@ -341,5 +424,6 @@ module.exports = {
     updateProfile,
     uploadProfilePhoto,
     getUsers,
-    getMatches
+    getMatches,
+    getDashboardStats
 };

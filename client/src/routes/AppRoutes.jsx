@@ -4,58 +4,48 @@ import Home from "../pages/Home/Home";
 import Register from "../pages/Register/Register";
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
-import EditProfile from "../pages/EditProfile/EditProfile";
-import ProtectedRoute from "./ProtectedRoute";
 import Discover from "../pages/Discover/Discover";
+import EditProfile from "../pages/EditProfile/EditProfile";
+
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../layouts/MainLayout";
 
 function AppRoutes() {
     return (
         <Routes>
 
             {/* Public Routes */}
-            <Route
-                path="/"
-                element={<Home />}
-            />
+
+            <Route path="/" element={<Home />} />
+
+            <Route path="/register" element={<Register />} />
+
+            <Route path="/login" element={<Login />} />
+
+            {/* Protected Routes */}
 
             <Route
-                path="/register"
-                element={<Register />}
-            />
-
-            <Route
-                path="/login"
-                element={<Login />}
-            />
-
-            {/* Protected Dashboard */}
-            <Route
-                path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <MainLayout />
                     </ProtectedRoute>
                 }
-            />
+            >
+                <Route
+                    path="/dashboard"
+                    element={<Dashboard />}
+                />
 
-            {/* Protected Edit Profile */}
-            <Route
-                path="/edit-profile"
-                element={
-                    <ProtectedRoute>
-                        <EditProfile />
-                    </ProtectedRoute>
-                }
-            />
+                <Route
+                    path="/discover"
+                    element={<Discover />}
+                />
 
-<Route
-    path="/discover"
-    element={
-        <ProtectedRoute>
-            <Discover />
-        </ProtectedRoute>
-    }
-/>
+                <Route
+                    path="/edit-profile"
+                    element={<EditProfile />}
+                />
+            </Route>
 
         </Routes>
     );

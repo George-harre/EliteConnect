@@ -1,121 +1,338 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { getProfile } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
+
+import {
+    FaHeart,
+    FaComments,
+    FaUserEdit,
+    FaCompass
+} from "react-icons/fa";
+
+import {
+    getProfile,
+    getDashboardStats
+} from "../../services/userService";
+
+import ProfilePhotoUploader from "../../components/ProfilePhotoUploader";
+import ProfileCompletion from "../../components/ProfileCompletion";
+import StatCard from "../../components/StatCard";
+import QuickActionCard from "../../components/QuickActionCard";
 
 function Dashboard() {
+
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
+
+    const [stats, setStats] = useState({
+        likesReceived: 0,
+        matches: 0,
+        messages: 0,
+        profileViews: 0
+    });
+
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadProfile = async () => {
-            try {
-                const data = await getProfile();
-                setUser(data.user);
-            } catch (error) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                navigate("/login");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const loadProfile = async () => {
 
-        loadProfile();
-    }, [navigate]);
+        try {
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+            const [profileData, statsData] = await Promise.all([
+                getProfile(),
+                getDashboardStats()
+            ]);
+
+            setUser(profileData.user);
+            setStats(statsData);
+
+        } catch (error) {
+
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+
+            navigate("/login");
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
     };
+
+    useEffect(() => {
+        loadProfile();
+    }, []);
 
     if (loading) {
         return (
-            <h2 style={{ textAlign: "center", marginTop: "100px" }}>
+            <div className="text-center text-2xl mt-20">
                 Loading...
-            </h2>
+            </div>
         );
     }
 
     return (
-        <div style={{ padding: "40px" }}>
-            <h1>Welcome, {user.firstName} 👋</h1>
 
-            <hr />
-            <br />
+        <div className="space-y-8">
 
-            <h2>Profile Information</h2>
+            {/* Welcome Banner */}
 
-            <p>
-                <strong>Name:</strong> {user.firstName} {user.lastName}
-            </p>
+            <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-3xl p-8 shadow-xl">
 
-            <p>
-                <strong>Email:</strong> {user.email}
-            </p>
+                <h1 className="text-4xl font-bold">
+                    Welcome back, {user.firstName} 👋
+                </h1>
 
-            <p>
-                <strong>Occupation:</strong>{" "}
-                {user.occupation || "Not provided"}
-            </p>
+                <p className="mt-3 text-lg opacity-90">
+                    Ready to discover meaningful connections today?
+                </p>
 
-            <p>
-                <strong>Company:</strong>{" "}
-                {user.company || "Not provided"}
-            </p>
+            </div>
 
-            <p>
-                <strong>Education:</strong>{" "}
-                {user.education || "Not provided"}
-            </p>
+            {/* Profile Completion */}
 
-            <p>
-                <strong>Location:</strong>{" "}
-                {user.location || "Not provided"}
-            </p>
+            <ProfileCompletion user={user} />
 
-            <p>
-                <strong>Age:</strong>{" "}
-                {user.age || "Not provided"}
-            </p>
+            {/* Statistics */}
 
-            <p>
-                <strong>Relationship Goal:</strong>{" "}
-                {user.relationshipGoal}
-            </p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
 
-            <p>
-                <strong>Interested In:</strong>{" "}
-                {user.interestedIn}
-            </p>
+                <StatCard
+                    icon="💕"
+                    title="Matches"
+                    value={stats.matches}
+                />
 
-            <p>
-                <strong>Bio:</strong>{" "}
-                {user.bio || "No bio yet."}
-            </p>
+                <StatCard
+                    icon="👍"
+                    title="Likes Received"
+                    value={stats.likesReceived}
+                />
 
-            <br />
+                <StatCard
+                    icon="💬"
+                    title="Messages"
+                    value={stats.messages}
+                />
 
-            <Link to="/edit-profile">
-    <button>Edit Profile</button>
-</Link>
+                <StatCard
+                    icon="👀"
+                    title="Profile Views"
+                    value={stats.profileViews}
+                />
 
-&nbsp;&nbsp;
+            </div>
 
-<Link to="/discover">
-    <button>Discover People ❤️</button>
-</Link>
+            {/* Main Content */}
 
-<br />
-<br />
+            <div className="grid lg:grid-cols-3 gap-8">
 
-<button onClick={handleLogout}>
-    Logout
-</button>
+                {/* Left Side */}
+
+                <div className="bg-white rounded-3xl shadow-lg p-8">
+
+                    <div className="flex flex-col items-center">
+
+                        {user.profilePhoto ? (
+
+                            <img
+                                src={`http://localhost:5000${user.profilePhoto}`}
+                                alt="Profile"
+                                className="w-40 h-40 rounded-full object-cover border-4 border-pink-500"
+                            />
+
+                        ) : (
+
+                            <div className="w-40 h-40 rounded-full bg-pink-500 flex items-center justify-center text-white text-6xl font-bold">
+
+                                {user.firstName.charAt(0)}
+
+                            </div>
+
+                        )}
+
+                        <h2 className="text-3xl font-bold mt-6">
+
+                            {user.firstName} {user.lastName}
+
+                        </h2>
+
+                        <p className="text-gray-500 mt-2">
+
+                            {user.occupation || "Occupation not provided"}
+
+                        </p>
+
+                        <p className="text-gray-500">
+
+                            {user.location || "Location not provided"}
+
+                        </p>
+
+                        <span className="mt-4 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
+
+                            ✔ Verification Coming Soon
+
+                        </span>
+
+                    </div>
+
+                    <div className="mt-8">
+
+                        <ProfilePhotoUploader
+                            user={user}
+                            refreshProfile={loadProfile}
+                        />
+
+                    </div>
+
+                </div>
+
+                {/* Right Side */}
+
+                <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg p-8">
+
+                    <h2 className="text-2xl font-bold mb-6">
+
+                        Profile Information
+
+                    </h2>
+
+                    <div className="grid md:grid-cols-2 gap-5">
+
+                        <Info title="Email" value={user.email} />
+
+                        <Info
+                            title="Age"
+                            value={user.age || "Not provided"}
+                        />
+
+                        <Info
+                            title="Gender"
+                            value={user.gender}
+                        />
+
+                        <Info
+                            title="Interested In"
+                            value={user.interestedIn}
+                        />
+
+                        <Info
+                            title="Relationship Goal"
+                            value={user.relationshipGoal}
+                        />
+
+                        <Info
+                            title="Occupation"
+                            value={user.occupation || "Not provided"}
+                        />
+
+                        <Info
+                            title="Company"
+                            value={user.company || "Not provided"}
+                        />
+
+                        <Info
+                            title="Education"
+                            value={user.education || "Not provided"}
+                        />
+
+                        <Info
+                            title="Location"
+                            value={user.location || "Not provided"}
+                        />
+
+                    </div>
+
+                    <div className="mt-8">
+
+                        <h3 className="font-bold text-xl">
+
+                            Bio
+
+                        </h3>
+
+                        <p className="text-gray-600 mt-2">
+
+                            {user.bio || "No bio yet."}
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* Quick Actions */}
+
+            <div>
+
+                <h2 className="text-2xl font-bold mb-6">
+
+                    Quick Actions
+
+                </h2>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                    <QuickActionCard
+                        icon={<FaUserEdit />}
+                        title="Edit Profile"
+                        description="Update your profile information."
+                        link="/edit-profile"
+                    />
+
+                    <QuickActionCard
+                        icon={<FaCompass />}
+                        title="Discover"
+                        description="Find new people."
+                        link="/discover"
+                    />
+
+                    <QuickActionCard
+                        icon={<FaHeart />}
+                        title="Matches"
+                        description="View your matches."
+                        link="/matches"
+                    />
+
+                    <QuickActionCard
+                        icon={<FaComments />}
+                        title="Messages"
+                        description="Continue chatting."
+                        link="/messages"
+                    />
+
+                </div>
+
+            </div>
+
         </div>
+
     );
+
+}
+
+function Info({ title, value }) {
+
+    return (
+
+        <div className="bg-gray-50 rounded-xl p-4">
+
+            <h3 className="text-gray-500 text-sm">
+                {title}
+            </h3>
+
+            <p className="font-semibold mt-1">
+                {value}
+            </p>
+
+        </div>
+
+    );
+
 }
 
 export default Dashboard;
