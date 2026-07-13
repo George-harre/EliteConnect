@@ -99,15 +99,21 @@ function Dashboard() {
             <br />
 
             <Link to="/edit-profile">
-                <button>Edit Profile</button>
-            </Link>
+    <button>Edit Profile</button>
+</Link>
 
-            <br />
-            <br />
+&nbsp;&nbsp;
 
-            <button onClick={handleLogout}>
-                Logout
-            </button>
+<Link to="/discover">
+    <button>Discover People ❤️</button>
+</Link>
+
+<br />
+<br />
+
+<button onClick={handleLogout}>
+    Logout
+</button>
         </div>
     );
 }

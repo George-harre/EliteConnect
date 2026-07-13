@@ -6,6 +6,7 @@ import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import EditProfile from "../pages/EditProfile/EditProfile";
 import ProtectedRoute from "./ProtectedRoute";
+import Discover from "../pages/Discover/Discover";
 
 function AppRoutes() {
     return (
@@ -46,6 +47,15 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+
+<Route
+    path="/discover"
+    element={
+        <ProtectedRoute>
+            <Discover />
+        </ProtectedRoute>
+    }
+/>
 
         </Routes>
     );
