@@ -1,22 +1,20 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
     let token;
 
-    // Check Authorization header
     if (
         req.headers.authorization &&
         req.headers.authorization.startsWith("Bearer")
     ) {
         try {
-            // Get token from header
             token = req.headers.authorization.split(" ")[1];
 
-            // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // Save user information to request
-            req.user = decoded;
+            // Load the user from the database (without password)
+            req.user = await User.findById(decoded.id).select("-password");
 
             next();
 

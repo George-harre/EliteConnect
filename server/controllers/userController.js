@@ -101,10 +101,17 @@ const loginUser = async (req, res) => {
     }
 };
 
+const getProfile = async (req, res) => {
+    res.status(200).json({
+        message: "Profile loaded successfully.",
+        user: req.user
+    });
+};
 // ===============================
 // Export Controllers
 // ===============================
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    getProfile
 };
