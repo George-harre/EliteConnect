@@ -26,6 +26,8 @@ const userSchema = new mongoose.Schema(
         required: true
     },
 
+
+    // Professional Information
     occupation: {
         type: String,
         default: ""
@@ -41,11 +43,15 @@ const userSchema = new mongoose.Schema(
         default: ""
     },
 
+
+    // Location
     location: {
         type: String,
         default: ""
     },
 
+
+    // Dating Profile Information
     age: {
         type: Number,
         default: null
@@ -53,44 +59,76 @@ const userSchema = new mongoose.Schema(
 
     gender: {
         type: String,
-        enum: ["Male", "Female", "Other"],
+        enum: [
+            "Male",
+            "Female",
+            "Other"
+        ],
         default: "Other"
     },
 
+
+    // Who the user wants to meet
     interestedIn: {
         type: String,
-        enum: ["Male", "Female", "Everyone"],
+        enum: [
+            "Male",
+            "Female",
+            "Everyone"
+        ],
         default: "Everyone"
     },
 
+
+    // Dating intention
     relationshipGoal: {
         type: String,
-        default: ""
+        enum: [
+            "Long-term relationship",
+            "Short-term dating",
+            "Friendship",
+            "Marriage",
+            "Not sure"
+        ],
+        default: "Not sure"
     },
 
+
+    // About user
     bio: {
         type: String,
         default: ""
     },
 
+
+    // User interests for compatibility matching
     interests: {
         type: [String],
         default: []
     },
 
+
+    // Profile picture
     profilePhoto: {
         type: String,
         default: ""
     },
 
+
+    // Verification system
     verified: {
         type: Boolean,
         default: false
     },
 
+
+    // Subscription system
     subscription: {
         type: String,
-        enum: ["Free", "Premium"],
+        enum: [
+            "Free",
+            "Premium"
+        ],
         default: "Free"
     }
 
@@ -98,5 +136,6 @@ const userSchema = new mongoose.Schema(
 {
     timestamps: true
 });
+
 
 module.exports = mongoose.model("User", userSchema);

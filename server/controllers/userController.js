@@ -187,15 +187,76 @@ const uploadProfilePhoto = async (req, res) => {
         });
     }
 };
+
 // ===============================
-// Get All Users (except logged-in user)
+// Discover Users with Filters
 // ===============================
 const getUsers = async (req, res) => {
     try {
 
-        const users = await User.find({
+        const {
+            search,
+            gender,
+            location,
+            relationshipGoal,
+            minAge,
+            maxAge
+        } = req.query;
+
+        const filter = {
             _id: { $ne: req.user._id }
-        }).select("-password");
+        };
+
+        // Search by first or last name
+        if (search) {
+            filter.$or = [
+                {
+                    firstName: {
+                        $regex: search,
+                        $options: "i"
+                    }
+                },
+                {
+                    lastName: {
+                        $regex: search,
+                        $options: "i"
+                    }
+                }
+            ];
+        }
+
+        // Filter by gender
+        if (gender) {
+            filter.gender = gender;
+        }
+
+        // Filter by location
+        if (location) {
+            filter.location = {
+                $regex: location,
+                $options: "i"
+            };
+        }
+
+        // Filter by relationship goal
+        if (relationshipGoal) {
+            filter.relationshipGoal = relationshipGoal;
+        }
+
+        // Filter by age
+        if (minAge || maxAge) {
+            filter.age = {};
+
+            if (minAge) {
+                filter.age.$gte = Number(minAge);
+            }
+
+            if (maxAge) {
+                filter.age.$lte = Number(maxAge);
+            }
+        }
+
+        const users = await User.find(filter).select("-password");
 
         res.status(200).json({
             message: "Users loaded successfully.",
@@ -204,10 +265,96 @@ const getUsers = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
+};
+
+// ===============================
+// Smart Match Discovery
+// ===============================
+const getMatches = async (req, res) => {
+
+    try {
+
+        const currentUser = await User.findById(req.user._id);
+
+        const users = await User.find({
+            _id: { $ne: currentUser._id }
+        }).select("-password");
+
+
+        const matches = users.map(user => {
+
+            let score = 0;
+
+
+            // Same location
+            if (
+                currentUser.location &&
+                currentUser.location === user.location
+            ) {
+                score += 25;
+            }
+
+
+            // Same relationship goal
+            if (
+                currentUser.relationshipGoal &&
+                currentUser.relationshipGoal === user.relationshipGoal
+            ) {
+                score += 25;
+            }
+
+
+            // Common interests
+            if (
+                currentUser.interests &&
+                user.interests
+            ) {
+
+                const common =
+                    currentUser.interests.filter(
+                        interest =>
+                        user.interests.includes(interest)
+                    );
+
+                score += common.length * 10;
+            }
+
+
+            return {
+                user,
+                compatibilityScore: score
+            };
+
+        });
+
+
+        matches.sort(
+            (a,b) =>
+            b.compatibilityScore -
+            a.compatibilityScore
+        );
+
+
+        res.status(200).json({
+            message:"Matches generated successfully",
+            matches
+        });
+
+
+    } catch(error){
+
+        res.status(500).json({
+            message:error.message
+        });
+
+    }
+
 };
 // ===============================
 // Export Controllers
@@ -218,5 +365,6 @@ module.exports = {
     getProfile,
     updateProfile,
     uploadProfilePhoto,
-    getUsers
+    getUsers,
+    getMatches
 };

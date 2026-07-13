@@ -7,7 +7,8 @@ const {
     getProfile,
     updateProfile,
     uploadProfilePhoto,
-    getUsers
+    getUsers,
+    getMatches
 } = require("../controllers/userController");
 
 const protect = require("../middleware/authMiddleware");
@@ -21,6 +22,9 @@ router.post("/login", loginUser);
 
 // Get Logged-in User Profile
 router.get("/profile", protect, getProfile);
+
+// Get Matches
+router.get("/matches", protect, getMatches);
 
 // Update User Profile
 router.put("/profile", protect, updateProfile);
