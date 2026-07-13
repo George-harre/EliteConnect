@@ -107,11 +107,60 @@ const getProfile = async (req, res) => {
         user: req.user
     });
 };
+
+const updateProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found."
+            });
+        }
+
+        const {
+            occupation,
+            company,
+            education,
+            location,
+            age,
+            gender,
+            interestedIn,
+            relationshipGoal,
+            bio,
+            interests
+        } = req.body;
+
+        user.occupation = occupation ?? user.occupation;
+        user.company = company ?? user.company;
+        user.education = education ?? user.education;
+        user.location = location ?? user.location;
+        user.age = age ?? user.age;
+        user.gender = gender ?? user.gender;
+        user.interestedIn = interestedIn ?? user.interestedIn;
+        user.relationshipGoal = relationshipGoal ?? user.relationshipGoal;
+        user.bio = bio ?? user.bio;
+        user.interests = interests ?? user.interests;
+
+        const updatedUser = await user.save();
+
+        res.status(200).json({
+            message: "Profile updated successfully!",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
 // ===============================
 // Export Controllers
 // ===============================
 module.exports = {
     registerUser,
     loginUser,
-    getProfile
+    getProfile,
+    updateProfile
 };
