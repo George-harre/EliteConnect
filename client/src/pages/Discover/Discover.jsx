@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { getUsers } from "../../services/userService";
+import { likeUser } from "../../services/likeService";
 
 function Discover() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [likedUsers, setLikedUsers] = useState([]);
 
     useEffect(() => {
         const loadUsers = async () => {
@@ -20,8 +22,30 @@ function Discover() {
         loadUsers();
     }, []);
 
+    const handleLike = async (receiverId) => {
+        try {
+            const data = await likeUser(receiverId);
+
+            alert(data.message);
+
+            setLikedUsers((previous) => [
+                ...previous,
+                receiverId
+            ]);
+        } catch (error) {
+            alert(
+                error.response?.data?.message ||
+                "Failed to like user."
+            );
+        }
+    };
+
     if (loading) {
-        return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
+        return (
+            <h2 style={{ textAlign: "center" }}>
+                Loading...
+            </h2>
+        );
     }
 
     return (
@@ -45,7 +69,7 @@ function Discover() {
                     style={{
                         display: "grid",
                         gridTemplateColumns:
-                            "repeat(auto-fit, minmax(320px,1fr))",
+                            "repeat(auto-fit, minmax(320px, 1fr))",
                         gap: "25px",
                         marginTop: "30px"
                     }}
@@ -102,7 +126,8 @@ function Discover() {
                             </p>
 
                             <p>
-                                <strong>Bio:</strong><br />
+                                <strong>Bio:</strong>
+                                <br />
                                 {user.bio || "No bio yet."}
                             </p>
 
@@ -113,8 +138,15 @@ function Discover() {
                                     marginTop: "20px"
                                 }}
                             >
-                                <button>
-                                    ❤️ Like
+                                <button
+                                    onClick={() =>
+                                        handleLike(user._id)
+                                    }
+                                    disabled={likedUsers.includes(user._id)}
+                                >
+                                    {likedUsers.includes(user._id)
+                                        ? "❤️ Liked"
+                                        : "❤️ Like"}
                                 </button>
 
                                 <button>

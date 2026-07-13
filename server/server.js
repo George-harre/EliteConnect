@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const likeRoutes = require("./routes/likeRoutes");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
@@ -23,6 +24,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // API Routes
 app.use("/api/users", userRoutes);
+app.use("/api/likes", likeRoutes);
 app.use("/api/matches", matchRoutes);
 
 // Home Route
