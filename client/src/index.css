@@ -138,3 +138,17 @@ footer {
     text-align: center;
     font-weight: bold;
 }
+.form-container select,
+.form-container textarea {
+    width: 100%;
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.form-container textarea {
+    resize: vertical;
+    min-height: 120px;
+}
