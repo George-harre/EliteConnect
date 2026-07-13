@@ -188,6 +188,7 @@ const uploadProfilePhoto = async (req, res) => {
     }
 };
 
+
 // ===============================
 // Discover Users with Filters
 // ===============================
@@ -195,68 +196,45 @@ const getUsers = async (req, res) => {
     try {
 
         const {
-            search,
-            gender,
             location,
+            gender,
             relationshipGoal,
             minAge,
             maxAge
         } = req.query;
 
-        const filter = {
+        const filters = {
             _id: { $ne: req.user._id }
         };
 
-        // Search by first or last name
-        if (search) {
-            filter.$or = [
-                {
-                    firstName: {
-                        $regex: search,
-                        $options: "i"
-                    }
-                },
-                {
-                    lastName: {
-                        $regex: search,
-                        $options: "i"
-                    }
-                }
-            ];
-        }
-
-        // Filter by gender
-        if (gender) {
-            filter.gender = gender;
-        }
-
-        // Filter by location
         if (location) {
-            filter.location = {
+            filters.location = {
                 $regex: location,
                 $options: "i"
             };
         }
 
-        // Filter by relationship goal
-        if (relationshipGoal) {
-            filter.relationshipGoal = relationshipGoal;
+        if (gender) {
+            filters.gender = gender;
         }
 
-        // Filter by age
+        if (relationshipGoal) {
+            filters.relationshipGoal = relationshipGoal;
+        }
+
         if (minAge || maxAge) {
-            filter.age = {};
+            filters.age = {};
 
             if (minAge) {
-                filter.age.$gte = Number(minAge);
+                filters.age.$gte = Number(minAge);
             }
 
             if (maxAge) {
-                filter.age.$lte = Number(maxAge);
+                filters.age.$lte = Number(maxAge);
             }
         }
 
-        const users = await User.find(filter).select("-password");
+        const users = await User.find(filters).select("-password");
 
         res.status(200).json({
             message: "Users loaded successfully.",
@@ -265,14 +243,11 @@ const getUsers = async (req, res) => {
         });
 
     } catch (error) {
-
         res.status(500).json({
             message: error.message
         });
-
     }
 };
-
 // ===============================
 // Smart Match Discovery
 // ===============================

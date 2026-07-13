@@ -7,24 +7,38 @@ const {
     getProfile,
     updateProfile,
     uploadProfilePhoto,
-    getUsers,
-    getMatches
+    getUsers
 } = require("../controllers/userController");
 
 const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
+const {
+    validateRegister,
+    handleValidationErrors
+} = require("../validators/userValidator");
+
+// ===============================
+// Public Routes
+// ===============================
+
 // Register User
-router.post("/register", registerUser);
+router.post(
+    "/register",
+    validateRegister,
+    handleValidationErrors,
+    registerUser
+);
 
 // Login User
 router.post("/login", loginUser);
 
+// ===============================
+// Protected Routes
+// ===============================
+
 // Get Logged-in User Profile
 router.get("/profile", protect, getProfile);
-
-// Get Matches
-router.get("/matches", protect, getMatches);
 
 // Update User Profile
 router.put("/profile", protect, updateProfile);
@@ -37,6 +51,7 @@ router.put(
     uploadProfilePhoto
 );
 
+// Discover Other Users
 router.get("/discover", protect, getUsers);
 
 module.exports = router;
