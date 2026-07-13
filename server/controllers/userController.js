@@ -155,6 +155,60 @@ const updateProfile = async (req, res) => {
         });
     }
 };
+const uploadProfilePhoto = async (req, res) => {
+    try {
+
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found."
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Please upload an image."
+            });
+        }
+
+        user.profilePhoto = `/uploads/profiles/${req.file.filename}`;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Profile photo uploaded successfully!",
+            profilePhoto: user.profilePhoto
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
+// ===============================
+// Get All Users (except logged-in user)
+// ===============================
+const getUsers = async (req, res) => {
+    try {
+
+        const users = await User.find({
+            _id: { $ne: req.user._id }
+        }).select("-password");
+
+        res.status(200).json({
+            message: "Users loaded successfully.",
+            count: users.length,
+            users
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
 // ===============================
 // Export Controllers
 // ===============================
@@ -162,5 +216,7 @@ module.exports = {
     registerUser,
     loginUser,
     getProfile,
-    updateProfile
+    updateProfile,
+    uploadProfilePhoto,
+    getUsers
 };
