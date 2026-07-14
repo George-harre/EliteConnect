@@ -1,13 +1,12 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://eliteconnect-x6xw.onrender.com/api",
+    baseURL: import.meta.env.VITE_API_URL,
     headers: {
         "Content-Type": "application/json"
     }
 });
 
-// Automatically attach JWT token
 api.interceptors.request.use((config) => {
 
     const token = localStorage.getItem("token");
