@@ -45,14 +45,18 @@ function Dashboard() {
             setUser(profileData.user);
             setStats(statsData);
 
-        } catch (error) {
+        }
+
+        catch (error) {
 
             localStorage.removeItem("token");
             localStorage.removeItem("user");
 
             navigate("/login");
 
-        } finally {
+        }
+
+        finally {
 
             setLoading(false);
 
@@ -61,36 +65,46 @@ function Dashboard() {
     };
 
     useEffect(() => {
+
         loadProfile();
+
     }, []);
 
     if (loading) {
+
         return (
+
             <div className="text-center text-2xl mt-20">
+
                 Loading...
+
             </div>
+
         );
+
     }
 
     return (
 
         <div className="space-y-8">
 
-            {/* Welcome Banner */}
+            {/* Welcome */}
 
             <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-3xl p-8 shadow-xl">
 
                 <h1 className="text-4xl font-bold">
+
                     Welcome back, {user.firstName} 👋
+
                 </h1>
 
                 <p className="mt-3 text-lg opacity-90">
+
                     Ready to discover meaningful connections today?
+
                 </p>
 
             </div>
-
-            {/* Profile Completion */}
 
             <ProfileCompletion user={user} />
 
@@ -98,23 +112,44 @@ function Dashboard() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
 
-                <StatCard
-                    icon="💕"
-                    title="Matches"
-                    value={stats.matches}
-                />
+                <div
+                    className="cursor-pointer"
+                    onClick={() => navigate("/matches")}
+                >
 
-                <StatCard
-                    icon="👍"
-                    title="Likes Received"
-                    value={stats.likesReceived}
-                />
+                    <StatCard
+                        icon="💕"
+                        title="Matches"
+                        value={stats.matches}
+                    />
 
-                <StatCard
-                    icon="💬"
-                    title="Messages"
-                    value={stats.messages}
-                />
+                </div>
+
+                <div
+                    className="cursor-pointer"
+                    onClick={() => navigate("/likes")}
+                >
+
+                    <StatCard
+                        icon="👍"
+                        title="Likes Received"
+                        value={stats.likesReceived}
+                    />
+
+                </div>
+
+                <div
+                    className="cursor-pointer"
+                    onClick={() => navigate("/messages")}
+                >
+
+                    <StatCard
+                        icon="💬"
+                        title="Messages"
+                        value={stats.messages}
+                    />
+
+                </div>
 
                 <StatCard
                     icon="👀"
@@ -124,33 +159,41 @@ function Dashboard() {
 
             </div>
 
-            {/* Main Content */}
+            {/* Profile */}
 
             <div className="grid lg:grid-cols-3 gap-8">
-
-                {/* Left Side */}
 
                 <div className="bg-white rounded-3xl shadow-lg p-8">
 
                     <div className="flex flex-col items-center">
 
-                        {user.profilePhoto ? (
+                        {
 
-                            <img
-                                src={`http://localhost:5000${user.profilePhoto}`}
-                                alt="Profile"
-                                className="w-40 h-40 rounded-full object-cover border-4 border-pink-500"
-                            />
+                            user.profilePhoto ?
 
-                        ) : (
+                            (
 
-                            <div className="w-40 h-40 rounded-full bg-pink-500 flex items-center justify-center text-white text-6xl font-bold">
+                                <img
+                                    src={`http://localhost:5000${user.profilePhoto}`}
+                                    alt="Profile"
+                                    className="w-40 h-40 rounded-full object-cover border-4 border-pink-500"
+                                />
 
-                                {user.firstName.charAt(0)}
+                            )
 
-                            </div>
+                            :
 
-                        )}
+                            (
+
+                                <div className="w-40 h-40 rounded-full bg-pink-500 text-white flex items-center justify-center text-6xl font-bold">
+
+                                    {user.firstName.charAt(0)}
+
+                                </div>
+
+                            )
+
+                        }
 
                         <h2 className="text-3xl font-bold mt-6">
 
@@ -189,8 +232,6 @@ function Dashboard() {
 
                 </div>
 
-                {/* Right Side */}
-
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg p-8">
 
                     <h2 className="text-2xl font-bold mb-6">
@@ -203,45 +244,21 @@ function Dashboard() {
 
                         <Info title="Email" value={user.email} />
 
-                        <Info
-                            title="Age"
-                            value={user.age || "Not provided"}
-                        />
+                        <Info title="Age" value={user.age || "Not provided"} />
 
-                        <Info
-                            title="Gender"
-                            value={user.gender}
-                        />
+                        <Info title="Gender" value={user.gender} />
 
-                        <Info
-                            title="Interested In"
-                            value={user.interestedIn}
-                        />
+                        <Info title="Interested In" value={user.interestedIn} />
 
-                        <Info
-                            title="Relationship Goal"
-                            value={user.relationshipGoal}
-                        />
+                        <Info title="Relationship Goal" value={user.relationshipGoal} />
 
-                        <Info
-                            title="Occupation"
-                            value={user.occupation || "Not provided"}
-                        />
+                        <Info title="Occupation" value={user.occupation || "Not provided"} />
 
-                        <Info
-                            title="Company"
-                            value={user.company || "Not provided"}
-                        />
+                        <Info title="Company" value={user.company || "Not provided"} />
 
-                        <Info
-                            title="Education"
-                            value={user.education || "Not provided"}
-                        />
+                        <Info title="Education" value={user.education || "Not provided"} />
 
-                        <Info
-                            title="Location"
-                            value={user.location || "Not provided"}
-                        />
+                        <Info title="Location" value={user.location || "Not provided"} />
 
                     </div>
 
@@ -322,11 +339,15 @@ function Info({ title, value }) {
         <div className="bg-gray-50 rounded-xl p-4">
 
             <h3 className="text-gray-500 text-sm">
+
                 {title}
+
             </h3>
 
             <p className="font-semibold mt-1">
+
                 {value}
+
             </p>
 
         </div>

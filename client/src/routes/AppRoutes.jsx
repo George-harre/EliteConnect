@@ -6,20 +6,29 @@ import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Discover from "../pages/Discover/Discover";
 import Matches from "../pages/Matches/Matches";
+import Messages from "../pages/Messages/Messages";
+import Chat from "../pages/Chat/Chat";
+import Notifications from "../pages/Notifications/Notifications";
 import EditProfile from "../pages/EditProfile/EditProfile";
+import LikesReceived from "../pages/LikesReceived/LikesReceived";
 
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../layouts/MainLayout";
 
 function AppRoutes() {
+
     return (
+
         <Routes>
 
             {/* ===============================
                 Public Routes
             =============================== */}
 
-            <Route path="/" element={<Home />} />
+            <Route
+                path="/"
+                element={<Home />}
+            />
 
             <Route
                 path="/register"
@@ -54,8 +63,28 @@ function AppRoutes() {
                 />
 
                 <Route
+                    path="/likes"
+                    element={<LikesReceived />}
+                />
+
+                <Route
                     path="/matches"
                     element={<Matches />}
+                />
+
+                <Route
+                    path="/messages"
+                    element={<Messages />}
+                />
+
+                <Route
+                    path="/messages/:userId"
+                    element={<Chat />}
+                />
+
+                <Route
+                    path="/notifications"
+                    element={<Notifications />}
                 />
 
                 <Route
@@ -66,7 +95,9 @@ function AppRoutes() {
             </Route>
 
         </Routes>
+
     );
+
 }
 
 export default AppRoutes;

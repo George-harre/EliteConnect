@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const Like = require("../models/Like");
+const Match = require("../models/Match");
+const Message = require("../models/Message");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -10,7 +12,6 @@ const registerUser = async (req, res) => {
     try {
         const { firstName, lastName, email, password } = req.body;
 
-        // Check if user already exists
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
@@ -19,10 +20,8 @@ const registerUser = async (req, res) => {
             });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new user
         const user = await User.create({
             firstName,
             lastName,
@@ -41,9 +40,11 @@ const registerUser = async (req, res) => {
         });
 
     } catch (error) {
+
         res.status(500).json({
             message: error.message
         });
+
     }
 };
 
@@ -51,11 +52,11 @@ const registerUser = async (req, res) => {
 // Login User
 // ===============================
 const loginUser = async (req, res) => {
+
     try {
 
         const { email, password } = req.body;
 
-        // Find user
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -64,7 +65,6 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // Compare password
         const isMatch = await bcrypt.compare(
             password,
             user.password
@@ -76,7 +76,6 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // Generate JWT
         const token = jwt.sign(
             {
                 id: user._id,
@@ -106,6 +105,7 @@ const loginUser = async (req, res) => {
         });
 
     }
+
 };
 
 // ===============================
@@ -254,13 +254,9 @@ const getUsers = async (req, res) => {
 
             filters.age = {};
 
-            if (minAge) {
-                filters.age.$gte = Number(minAge);
-            }
+            if (minAge) filters.age.$gte = Number(minAge);
 
-            if (maxAge) {
-                filters.age.$lte = Number(maxAge);
-            }
+            if (maxAge) filters.age.$lte = Number(maxAge);
 
         }
 
@@ -319,11 +315,9 @@ const getMatches = async (req, res) => {
                 user.interests
             ) {
 
-                const common =
-                    currentUser.interests.filter(
-                        interest =>
-                            user.interests.includes(interest)
-                    );
+                const common = currentUser.interests.filter(
+                    interest => user.interests.includes(interest)
+                );
 
                 score += common.length * 10;
 
@@ -337,9 +331,7 @@ const getMatches = async (req, res) => {
         });
 
         matches.sort(
-            (a, b) =>
-                b.compatibilityScore -
-                a.compatibilityScore
+            (a, b) => b.compatibilityScore - a.compatibilityScore
         );
 
         res.status(200).json({
@@ -366,31 +358,24 @@ const getDashboardStats = async (req, res) => {
 
         const userId = req.user._id;
 
-        // Total Likes Received
+        // Likes Received
         const likesReceived = await Like.countDocuments({
             receiver: userId
         });
 
-        // Likes Sent
-        const likesSent = await Like.find({
-            sender: userId
+        // Real Matches
+        const matches = await Match.countDocuments({
+            users: userId
         });
 
-        // Mutual Matches
-        let matches = 0;
+        // Unread Messages
+        const messages = await Message.countDocuments({
+            receiver: userId,
+            read: false
+        });
 
-        for (const like of likesSent) {
-
-            const mutualLike = await Like.findOne({
-                sender: like.receiver,
-                receiver: userId
-            });
-
-            if (mutualLike) {
-                matches++;
-            }
-
-        }
+        // Profile Views (Coming Soon)
+        const profileViews = 0;
 
         res.status(200).json({
 
@@ -398,9 +383,9 @@ const getDashboardStats = async (req, res) => {
 
             matches,
 
-            messages: 0,
+            messages,
 
-            profileViews: 0
+            profileViews
 
         });
 
