@@ -231,48 +231,120 @@ const getUsers = async (req, res) => {
             maxAge
         } = req.query;
 
+        const currentUserId = req.user._id;
+
         const filters = {
-            _id: { $ne: req.user._id }
+            _id: {
+                $ne: currentUserId
+            }
         };
 
         if (location) {
+
             filters.location = {
                 $regex: location,
                 $options: "i"
             };
+
         }
 
         if (gender) {
+
             filters.gender = gender;
+
         }
 
         if (relationshipGoal) {
+
             filters.relationshipGoal = relationshipGoal;
+
         }
 
         if (minAge || maxAge) {
 
             filters.age = {};
 
-            if (minAge) filters.age.$gte = Number(minAge);
+            if (minAge) {
 
-            if (maxAge) filters.age.$lte = Number(maxAge);
+                filters.age.$gte = Number(minAge);
+
+            }
+
+            if (maxAge) {
+
+                filters.age.$lte = Number(maxAge);
+
+            }
 
         }
 
         const users = await User.find(filters)
             .select("-password");
 
+        // ===============================
+        // Add Like & Match Status
+        // ===============================
+
+        const formattedUsers = await Promise.all(
+
+            users.map(async (user) => {
+
+                const liked = await Like.findOne({
+
+                    sender: currentUserId,
+
+                    receiver: user._id
+
+                });
+
+                const matched = await Match.findOne({
+
+                    users: {
+
+                        $all: [
+
+                            currentUserId,
+
+                            user._id
+
+                        ]
+
+                    }
+
+                });
+
+                return {
+
+                    ...user.toObject(),
+
+                    isLiked: !!liked,
+
+                    isMatched: !!matched
+
+                };
+
+            })
+
+        );
+
         res.status(200).json({
+
             message: "Users loaded successfully.",
-            count: users.length,
-            users
+
+            count: formattedUsers.length,
+
+            users: formattedUsers
+
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         res.status(500).json({
+
             message: error.message
+
         });
 
     }
