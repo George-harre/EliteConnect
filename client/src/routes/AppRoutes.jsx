@@ -5,6 +5,7 @@ import Register from "../pages/Register/Register";
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Discover from "../pages/Discover/Discover";
+import Matches from "../pages/Matches/Matches";
 import EditProfile from "../pages/EditProfile/EditProfile";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -14,15 +15,25 @@ function AppRoutes() {
     return (
         <Routes>
 
-            {/* Public Routes */}
+            {/* ===============================
+                Public Routes
+            =============================== */}
 
             <Route path="/" element={<Home />} />
 
-            <Route path="/register" element={<Register />} />
+            <Route
+                path="/register"
+                element={<Register />}
+            />
 
-            <Route path="/login" element={<Login />} />
+            <Route
+                path="/login"
+                element={<Login />}
+            />
 
-            {/* Protected Routes */}
+            {/* ===============================
+                Protected Routes
+            =============================== */}
 
             <Route
                 element={
@@ -31,6 +42,7 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             >
+
                 <Route
                     path="/dashboard"
                     element={<Dashboard />}
@@ -42,9 +54,15 @@ function AppRoutes() {
                 />
 
                 <Route
+                    path="/matches"
+                    element={<Matches />}
+                />
+
+                <Route
                     path="/edit-profile"
                     element={<EditProfile />}
                 />
+
             </Route>
 
         </Routes>

@@ -60,14 +60,15 @@ const likeUser = async (req, res) => {
                     message: "🎉 It's a Match!",
                     match
                 });
+
             }
 
             return res.status(200).json({
                 message: "You are already matched."
             });
+
         }
 
-        // No mutual like yet
         return res.status(201).json({
             message: "User liked successfully!",
             like
@@ -82,6 +83,54 @@ const likeUser = async (req, res) => {
     }
 };
 
+// ===============================
+// Get My Matches
+// ===============================
+const getMyMatches = async (req, res) => {
+
+    try {
+
+        const userId = req.user._id;
+
+        const matches = await Match.find({
+            users: userId
+        })
+        .populate({
+            path: "users",
+            select: "-password"
+        });
+
+        const formattedMatches = matches.map(match => {
+
+            const otherUser = match.users.find(
+                user => user._id.toString() !== userId.toString()
+            );
+
+            return {
+                matchId: match._id,
+                user: otherUser,
+                matchedAt: match.createdAt
+            };
+
+        });
+
+        res.status(200).json({
+            message: "Matches loaded successfully.",
+            count: formattedMatches.length,
+            matches: formattedMatches
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+};
+
 module.exports = {
-    likeUser
+    likeUser,
+    getMyMatches
 };
