@@ -4,7 +4,9 @@ import {
     FaPaperPlane,
     FaCircle,
     FaCheck,
-    FaCheckDouble
+    FaCheckDouble,
+    FaSmile,
+    FaPaperclip
 } from "react-icons/fa";
 
 import socket from "../../socket";
@@ -53,11 +55,8 @@ function Chat() {
         socket.on("receiveMessage", (message) => {
 
             if (
-
                 message.sender === userId ||
-
                 message.sender?._id === userId
-
             ) {
 
                 setMessages(prev => [
@@ -90,27 +89,17 @@ function Chat() {
 
         });
 
-        // ===============================
-        // Read Receipts
-        // ===============================
-
         socket.on("messagesRead", ({ messageIds }) => {
 
             setMessages(prev =>
-
                 prev.map(message =>
-
                     messageIds.includes(message._id)
-
                         ? {
                               ...message,
                               read: true
                           }
-
                         : message
-
                 )
-
             );
 
         });
@@ -118,13 +107,9 @@ function Chat() {
         return () => {
 
             socket.off("receiveMessage");
-
             socket.off("onlineUsers");
-
             socket.off("typing");
-
             socket.off("stopTyping");
-
             socket.off("messagesRead");
 
             socket.disconnect();
@@ -201,303 +186,370 @@ function Chat() {
     };
 
     // ==================================
-    // Send Message
-    // ==================================
-    const handleSend = async () => {
+// Send Message
+// ==================================
+const handleSend = async () => {
 
-        if (!text.trim()) return;
+    if (!text.trim()) return;
 
-        try {
+    try {
 
-            const response = await sendMessage(
+        const response = await sendMessage(
 
-                userId,
+            userId,
 
-                text
+            text
 
-            );
+        );
 
-            setMessages(prev => [
+        setMessages(prev => [
 
-                ...prev,
+            ...prev,
 
-                response.newMessage
+            response.newMessage
 
-            ]);
+        ]);
 
-            socket.emit(
+        socket.emit(
 
-                "sendMessage",
+            "sendMessage",
 
-                response.newMessage
+            response.newMessage
 
-            );
+        );
 
-            socket.emit("stopTyping", {
+        socket.emit("stopTyping", {
 
-                sender: currentUser.id,
+            sender: currentUser.id,
 
-                receiver: userId
+            receiver: userId
 
-            });
+        });
 
-            setText("");
+        setText("");
 
-        }
+    }
 
-        catch (error) {
+    catch (error) {
 
-            console.log(error);
+        console.log(error);
 
-        }
+    }
 
-    };
+};
 
-    const isOnline =
+const isOnline = onlineUsers.includes(userId);
 
-        onlineUsers.includes(userId);
+return (
 
-    return (
+<div className="max-w-6xl mx-auto px-2 sm:px-4">
 
-        <div className="max-w-5xl mx-auto">
+<div className="bg-white rounded-3xl shadow-2xl overflow-hidden h-[82vh] sm:h-[84vh] flex flex-col">
 
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden h-[82vh] flex flex-col">
+{/* ================= Header ================= */}
 
-                {/* Header */}
+<div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white px-4 sm:px-6 py-4 flex items-center justify-between shadow-md">
 
-                <div className="bg-pink-600 text-white p-5 flex items-center gap-4">
+<div className="flex items-center gap-4">
 
-                    {
+{
 
-                        user?.profilePhoto ?
+user?.profilePhoto ?
 
-                        (
+(
 
-                            <img
-                                src={`http://localhost:5000${user.profilePhoto}`}
-                                alt=""
-                                className="w-14 h-14 rounded-full object-cover"
-                            />
+<img
 
-                        )
+src={`http://localhost:5000${user.profilePhoto}`}
 
-                        :
+alt="Profile"
 
-                        (
+className="w-14 h-14 rounded-full object-cover border-2 border-white"
 
-                            <div className="w-14 h-14 rounded-full bg-white text-pink-600 flex items-center justify-center font-bold text-xl">
+/>
 
-                                {user?.firstName?.charAt(0)}
+)
 
-                            </div>
+:
 
-                        )
+(
 
-                    }
+<div className="w-14 h-14 rounded-full bg-white text-pink-600 flex items-center justify-center text-2xl font-bold">
 
-                    <div>
+{user?.firstName?.charAt(0)}
 
-                        <h2 className="text-xl font-bold">
+</div>
 
-                            {user?.firstName} {user?.lastName}
+)
 
-                        </h2>
+}
 
-                        <div className="flex items-center gap-2 text-sm">
+<div>
 
-                            <FaCircle
-                                className={
-                                    isOnline
-                                        ? "text-green-400 text-xs"
-                                        : "text-gray-300 text-xs"
-                                }
-                            />
+<h2 className="font-bold text-xl">
 
-                            {
+{user?.firstName} {user?.lastName}
 
-                                isOnline
+</h2>
 
-                                    ? "Online"
+<div className="flex items-center gap-2 mt-1">
 
-                                    : "Offline"
+<FaCircle
 
+className={`text-[10px] ${
+
+isOnline
+
+? "text-green-300"
+
+: "text-gray-300"
+
+}`}
+
+/>
+
+<span className="text-sm">
+
+{isOnline
+
+? "Online"
+
+: "Offline"}
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+{/* ================= Messages ================= */}
+
+<div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50 via-white to-pink-50 px-3 sm:px-6 py-6 space-y-5">
+
+{
+
+messages.map((msg) => {
+
+const mine =
+
+msg.sender?._id === currentUser.id ||
+
+msg.sender === currentUser.id;
+
+return (
+
+<div
+
+key={msg._id}
+
+className={`flex ${
+
+mine
+
+? "justify-end"
+
+: "justify-start"
+
+}`}
+
+>
+
+<div
+
+className={`max-w-[85%] sm:max-w-md rounded-3xl px-5 py-3 shadow-md transition hover:shadow-lg ${
+
+mine
+
+? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
+
+: "bg-white rounded-bl-md"
+
+}`}
+
+>
+
+<p className="leading-relaxed break-words">
+
+{msg.message}
+
+</p>
+
+<div className="flex justify-between items-center mt-3">
+
+<p
+
+className={`text-xs ${
+
+mine
+
+? "text-pink-100"
+
+: "text-gray-400"
+
+}`}
+
+>
+
+{
+
+new Date(
+
+msg.createdAt
+
+).toLocaleTimeString(
+
+[],
+
+{
+
+hour: "2-digit",
+
+minute: "2-digit"
+
+}
+
+)
+
+}
+
+</p>
+
+{
+
+mine && (
+
+msg.read ?
+
+<FaCheckDouble
+
+className="text-sky-300 text-xs"
+
+/>
+
+:
+
+<FaCheck
+
+className="text-pink-100 text-xs"
+
+/>
+
+)
+
+}
+
+</div>
+
+</div>
+
+</div>
+
+);
+
+})
+
+}
+
+{
+
+typing && (
+
+<div className="flex">
+
+<div className="bg-white rounded-full px-5 py-2 shadow text-gray-500 italic animate-pulse">
+
+💬 {user?.firstName} is typing...
+
+</div>
+
+</div>
+
+)
+
+}
+
+<div ref={bottomRef}></div>
+
+</div>
+
+                {/* ================= Input Area ================= */}
+
+                <div className="border-t bg-white px-3 sm:px-5 py-4">
+
+                    <div className="flex items-center gap-3">
+
+                        {/* Emoji Button */}
+
+                        <button
+                            type="button"
+                            className="hidden sm:flex w-11 h-11 rounded-full hover:bg-pink-100 items-center justify-center transition"
+                        >
+                            <FaSmile className="text-pink-600 text-lg" />
+                        </button>
+
+                        {/* Attachment Button */}
+
+                        <button
+                            type="button"
+                            className="hidden sm:flex w-11 h-11 rounded-full hover:bg-pink-100 items-center justify-center transition"
+                        >
+                            <FaPaperclip className="text-pink-600 text-lg" />
+                        </button>
+
+                        {/* Message Input */}
+
+                        <input
+                            type="text"
+                            value={text}
+                            placeholder="Type your message..."
+
+                            onChange={(e) =>
+                                handleTyping(e.target.value)
                             }
 
-                        </div>
+                            onKeyDown={(e) => {
+
+                                if (e.key === "Enter") {
+
+                                    handleSend();
+
+                                }
+
+                            }}
+
+                            className="flex-1 bg-pink-50 border border-pink-200 rounded-full px-6 py-3 outline-none focus:ring-2 focus:ring-pink-500 transition"
+
+                        />
+
+                        {/* Send Button */}
+
+                        <button
+
+                            onClick={handleSend}
+
+                            disabled={!text.trim()}
+
+                            className={`rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg
+
+                            ${
+                                text.trim()
+
+                                    ? "bg-pink-600 hover:bg-pink-700 hover:scale-105 text-white"
+
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
+
+                        >
+
+                            <FaPaperPlane />
+
+                        </button>
 
                     </div>
-
-                </div>
-
-                {/* Messages */}
-
-                <div className="flex-1 overflow-y-auto bg-pink-50 p-6 space-y-4">
-
-                    {
-
-                        messages.map((msg) => {
-
-                            const mine =
-
-                                msg.sender?._id === currentUser.id ||
-
-                                msg.sender === currentUser.id;
-
-                            return (
-
-                                <div
-
-                                    key={msg._id}
-
-                                    className={
-
-                                        mine
-
-                                            ? "flex justify-end"
-
-                                            : "flex justify-start"
-
-                                    }
-
-                                >
-
-                                    <div
-
-                                        className={
-
-                                            mine
-
-                                                ? "bg-pink-600 text-white rounded-3xl rounded-br-md px-5 py-3 max-w-md shadow"
-
-                                                : "bg-white rounded-3xl rounded-bl-md px-5 py-3 max-w-md shadow"
-
-                                        }
-
-                                    >
-
-                                        <p>
-
-                                            {msg.message}
-
-                                        </p>
-
-                                        <div className="flex justify-between items-center mt-2">
-
-                                            <p
-
-                                                className={
-
-                                                    mine
-
-                                                        ? "text-pink-100 text-xs"
-
-                                                        : "text-gray-400 text-xs"
-
-                                                }
-
-                                            >
-
-                                                {
-
-                                                    new Date(
-
-                                                        msg.createdAt
-
-                                                    ).toLocaleTimeString(
-
-                                                        [],
-
-                                                        {
-
-                                                            hour: "2-digit",
-
-                                                            minute: "2-digit"
-
-                                                        }
-
-                                                    )
-
-                                                }
-
-                                            </p>
-
-                                            {
-
-                                                mine && (
-
-                                                    msg.read ?
-
-                                                        <FaCheckDouble className="text-blue-300 text-xs" />
-
-                                                        :
-
-                                                        <FaCheck className="text-pink-100 text-xs" />
-
-                                                )
-
-                                            }
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            );
-
-                        })
-
-                    }
-
-                    {
-
-                        typing && (
-
-                            <div className="italic text-gray-500">
-
-                                {user?.firstName} is typing...
-
-                            </div>
-
-                        )
-
-                    }
-
-                    <div ref={bottomRef}></div>
-
-                </div>
-
-                {/* Input */}
-
-                <div className="border-t p-4 flex gap-4">
-
-                    <input
-                        type="text"
-                        value={text}
-                        placeholder="Type your message..."
-                        onChange={(e)=>handleTyping(e.target.value)}
-                        onKeyDown={(e)=>{
-
-                            if(e.key==="Enter"){
-
-                                handleSend();
-
-                            }
-
-                        }}
-                        className="flex-1 border rounded-full px-6 py-3 focus:ring-2 focus:ring-pink-500 outline-none"
-                    />
-
-                    <button
-                        onClick={handleSend}
-                        className="bg-pink-600 hover:bg-pink-700 text-white px-6 rounded-full flex items-center gap-2"
-                    >
-
-                        <FaPaperPlane />
-
-                        Send
-
-                    </button>
 
                 </div>
 

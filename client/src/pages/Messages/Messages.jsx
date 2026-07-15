@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaComments } from "react-icons/fa";
+
 import { getConversations } from "../../services/messageService";
+import { getImageUrl } from "../../utils/imageUrl";
 
 function Messages() {
 
@@ -42,11 +44,15 @@ function Messages() {
 
         return (
 
-            <h2 className="text-center text-2xl mt-10">
+            <div className="flex justify-center items-center h-[70vh]">
 
-                Loading conversations...
+                <h2 className="text-3xl font-bold">
 
-            </h2>
+                    Loading conversations...
+
+                </h2>
+
+            </div>
 
         );
 
@@ -54,15 +60,25 @@ function Messages() {
 
     return (
 
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
 
-            <h1 className="text-4xl font-bold text-pink-600 mb-8 flex items-center gap-3">
+            <div className="mb-10">
 
-                <FaComments />
+                <h1 className="text-4xl font-bold flex items-center gap-3">
 
-                Messages
+                    <FaComments className="text-pink-600" />
 
-            </h1>
+                    Messages
+
+                </h1>
+
+                <p className="text-gray-500 mt-2">
+
+                    Continue chatting with your matches.
+
+                </p>
+
+            </div>
 
             {
 
@@ -70,9 +86,15 @@ function Messages() {
 
                 ? (
 
-                    <div className="bg-white rounded-3xl shadow-lg p-10 text-center">
+                    <div className="bg-white rounded-3xl shadow-xl p-16 text-center">
 
-                        <h2 className="text-2xl font-bold">
+                        <div className="text-6xl">
+
+                            💬
+
+                        </div>
+
+                        <h2 className="text-3xl font-bold mt-6">
 
                             No conversations yet
 
@@ -95,7 +117,7 @@ function Messages() {
 
                         {
 
-                            conversations.map(conversation => (
+                            conversations.map((conversation) => (
 
                                 <Link
 
@@ -107,7 +129,7 @@ function Messages() {
 
                                 >
 
-                                    <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-xl hover:scale-[1.02] transition cursor-pointer flex items-center gap-5">
+                                    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.01] transition-all duration-300 p-5 flex items-center gap-5">
 
                                         {
 
@@ -117,11 +139,11 @@ function Messages() {
 
                                                 <img
 
-                                                    src={`http://localhost:5000${conversation.user.profilePhoto}`}
+                                                    src={getImageUrl(conversation.user.profilePhoto)}
 
-                                                    alt="Profile"
+                                                    alt={`${conversation.user.firstName} ${conversation.user.lastName}`}
 
-                                                    className="w-16 h-16 rounded-full object-cover"
+                                                    className="w-16 h-16 rounded-full object-cover border-2 border-pink-300"
 
                                                 />
 
@@ -143,25 +165,17 @@ function Messages() {
 
                                         }
 
-                                        <div className="flex-1">
+                                        <div className="flex-1 min-w-0">
 
                                             <h2 className="text-xl font-bold">
 
-                                                {
+                                                {conversation.user.firstName}{" "}
 
-                                                    conversation.user.firstName
-
-                                                }{" "}
-
-                                                {
-
-                                                    conversation.user.lastName
-
-                                                }
+                                                {conversation.user.lastName}
 
                                             </h2>
 
-                                            <p className="text-gray-500 mt-1">
+                                            <p className="text-gray-500 mt-1 truncate">
 
                                                 {
 
@@ -179,7 +193,7 @@ function Messages() {
 
                                             conversation.lastMessageTime && (
 
-                                                <div className="text-sm text-gray-400">
+                                                <div className="text-sm text-gray-400 whitespace-nowrap">
 
                                                     {
 
@@ -187,13 +201,19 @@ function Messages() {
 
                                                             conversation.lastMessageTime
 
-                                                        ).toLocaleTimeString([], {
+                                                        ).toLocaleTimeString(
 
-                                                            hour: "2-digit",
+                                                            [],
 
-                                                            minute: "2-digit"
+                                                            {
 
-                                                        })
+                                                                hour: "2-digit",
+
+                                                                minute: "2-digit"
+
+                                                            }
+
+                                                        )
 
                                                     }
 

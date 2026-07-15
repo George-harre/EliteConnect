@@ -7,6 +7,8 @@ import {
     markNotificationsRead
 } from "../../services/notificationService";
 
+import { getImageUrl } from "../../utils/imageUrl";
+
 function Notifications() {
 
     const currentUser = JSON.parse(
@@ -71,7 +73,6 @@ function Notifications() {
 
             await markNotificationsRead();
 
-            // Tell the notification bell
             socket.emit(
                 "notificationsRead",
                 currentUser.id
@@ -93,7 +94,7 @@ function Notifications() {
 
             <h1 className="text-3xl font-bold mb-8">
 
-                Notifications
+                🔔 Notifications
 
             </h1>
 
@@ -105,9 +106,25 @@ function Notifications() {
 
                     ? (
 
-                        <div className="bg-white rounded-xl shadow p-6 text-center text-gray-500">
+                        <div className="bg-white rounded-3xl shadow-xl p-16 text-center">
 
-                            No notifications yet.
+                            <div className="text-6xl">
+
+                                🔔
+
+                            </div>
+
+                            <h2 className="text-2xl font-bold mt-5">
+
+                                You're all caught up!
+
+                            </h2>
+
+                            <p className="text-gray-500 mt-3">
+
+                                New likes, matches and messages will appear here.
+
+                            </p>
 
                         </div>
 
@@ -121,38 +138,62 @@ function Notifications() {
 
                                 key={notification._id}
 
-                                className={`p-5 rounded-xl shadow transition-all duration-300 ${
+                                className={`p-5 rounded-2xl shadow transition-all duration-300 ${
+
                                     notification.read
+
                                         ? "bg-white"
+
                                         : "bg-pink-100 border-l-4 border-pink-600"
+
                                 }`}
 
                             >
 
-                                <p>
+                                <div className="flex items-center gap-4">
 
-                                    <strong>
+                                    <img
 
-                                        {notification.sender?.firstName}{" "}
-                                        {notification.sender?.lastName}
+                                        src={getImageUrl(notification.sender?.profilePhoto)}
 
-                                    </strong>{" "}
+                                        alt={notification.sender?.firstName}
 
-                                    {notification.text}
+                                        className="w-14 h-14 rounded-full object-cover border-2 border-pink-300"
 
-                                </p>
+                                    />
 
-                                <p className="text-sm text-gray-500 mt-2">
+                                    <div className="flex-1">
 
-                                    {
+                                        <p className="text-gray-800">
 
-                                        new Date(
-                                            notification.createdAt
-                                        ).toLocaleString()
+                                            <strong>
 
-                                    }
+                                                {notification.sender?.firstName}{" "}
+                                                {notification.sender?.lastName}
 
-                                </p>
+                                            </strong>{" "}
+
+                                            {notification.text}
+
+                                        </p>
+
+                                        <p className="text-sm text-gray-500 mt-2">
+
+                                            {
+
+                                                new Date(
+
+                                                    notification.createdAt
+
+                                                ).toLocaleString()
+
+                                            }
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
 
                             </div>
 

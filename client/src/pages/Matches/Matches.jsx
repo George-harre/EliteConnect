@@ -12,6 +12,7 @@ import {
 import {
     getMyMatches
 } from "../../services/likeService";
+import { getImageUrl } from "../../utils/imageUrl";
 
 function Matches() {
 
@@ -23,9 +24,7 @@ function Matches() {
 
     const [selectedUser, setSelectedUser] = useState(null);
 
-    const API_URL =
-        import.meta.env.VITE_API_URL.replace("/api", "");
-
+    
     useEffect(() => {
 
         loadMatches();
@@ -157,27 +156,10 @@ function Matches() {
                                 >
 
                                     <img
-
-                                        src={
-
-                                            match.user.profilePhoto
-
-                                                ?
-
-                                                `${API_URL}${match.user.profilePhoto}`
-
-                                                :
-
-                                                "https://placehold.co/600x700?text=No+Photo"
-
-                                        }
-
-                                        alt="Profile"
-
-                                        className="w-full h-96 object-cover"
-
-                                    />
-
+    src={getImageUrl(match.user.profilePhoto)}
+    alt="Profile"
+    className="w-full h-96 object-cover"
+/>
                                     <div className="p-6">
 
                                         <h2 className="text-3xl font-bold">
@@ -305,26 +287,10 @@ function Matches() {
                         {/* Profile Photo */}
 
                         <img
-
-                            src={
-
-                                selectedUser.profilePhoto
-
-                                    ?
-
-                                    `${API_URL}${selectedUser.profilePhoto}`
-
-                                    :
-
-                                    "https://placehold.co/900x700?text=No+Photo"
-
-                            }
-
-                            alt={selectedUser.firstName}
-
-                            className="w-full h-[450px] object-cover"
-
-                        />
+    src={getImageUrl(selectedUser.profilePhoto)}
+    alt={selectedUser.firstName}
+    className="w-full h-[450px] object-cover"
+/>
 
                         {/* Details */}
 

@@ -21,6 +21,7 @@ import ProfilePhotoUploader from "../../components/ProfilePhotoUploader";
 import ProfileCompletion from "../../components/ProfileCompletion";
 import StatCard from "../../components/StatCard";
 import QuickActionCard from "../../components/QuickActionCard";
+import { getImageUrl } from "../../utils/imageUrl";
 
 function Dashboard() {
 
@@ -238,10 +239,10 @@ function Dashboard() {
                                 (
 
                                     <img
-                                        src={`http://localhost:5000${user.profilePhoto}`}
-                                        alt="Profile"
-                                        className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-white shadow-lg"
-                                    />
+    src={getImageUrl(user.profilePhoto)}
+    alt="Profile"
+    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-white shadow-lg"
+/>
 
                                 )
 
