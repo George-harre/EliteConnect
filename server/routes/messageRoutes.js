@@ -3,25 +3,56 @@ const router = express.Router();
 
 const protect = require("../middleware/authMiddleware");
 
+const upload = require("../middleware/chatUploadMiddleware");
 const {
+
     sendMessage,
+
     getConversation,
+
     getConversations
+
 } = require("../controllers/messageController");
 
 // ===================================
 // Get all conversations
 // ===================================
-router.get("/", protect, getConversations);
+router.get(
+
+    "/",
+
+    protect,
+
+    getConversations
+
+);
 
 // ===================================
 // Get conversation with one user
 // ===================================
-router.get("/:userId", protect, getConversation);
+router.get(
+
+    "/:userId",
+
+    protect,
+
+    getConversation
+
+);
 
 // ===================================
-// Send message
+// Send Message (Text / Image)
 // ===================================
-router.post("/", protect, sendMessage);
+router.post(
+
+    "/",
+
+    protect,
+
+    upload.single("image"),
+
+    sendMessage
+
+);
 
 module.exports = router;

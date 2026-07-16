@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import EmojiPicker from "emoji-picker-react";
+
 import {
     FaPaperPlane,
     FaCircle,
     FaCheck,
     FaCheckDouble,
     FaSmile,
-    FaPaperclip
+    FaPaperclip,
+    FaTimes
 } from "react-icons/fa";
 
 import socket from "../../socket";
@@ -16,6 +19,8 @@ import {
     sendMessage
 } from "../../services/messageService";
 
+import { getImageUrl } from "../../utils/imageUrl";
+
 function Chat() {
 
     const { userId } = useParams();
@@ -24,121 +29,58 @@ function Chat() {
         localStorage.getItem("user")
     );
 
+    // ==========================
+    // State
+    // ==========================
+
     const [user, setUser] = useState(null);
+
     const [messages, setMessages] = useState([]);
+
     const [text, setText] = useState("");
 
     const [onlineUsers, setOnlineUsers] = useState([]);
+
     const [typing, setTyping] = useState(false);
 
+    const [showEmojiPicker, setShowEmojiPicker] =
+        useState(false);
+
+    // Image Attachment
+
+    const [selectedImage, setSelectedImage] =
+        useState(null);
+
+    const [imagePreview, setImagePreview] =
+        useState("");
+
+    // Fullscreen Viewer
+
+    const [fullscreenImage, setFullscreenImage] =
+        useState("");
+
+    const fileInputRef = useRef(null);
+
     const typingTimeout = useRef(null);
+
     const bottomRef = useRef(null);
 
-    // ==================================
+    // ==========================
     // Load Conversation
-    // ==================================
+    // ==========================
+
     useEffect(() => {
 
         loadConversation();
 
     }, [userId]);
 
-    // ==================================
-    // Socket Connection
-    // ==================================
-    useEffect(() => {
-
-        socket.connect();
-
-        socket.emit("join", currentUser.id);
-
-        socket.on("receiveMessage", (message) => {
-
-            if (
-                message.sender === userId ||
-                message.sender?._id === userId
-            ) {
-
-                setMessages(prev => [
-
-                    ...prev,
-
-                    message
-
-                ]);
-
-            }
-
-        });
-
-        socket.on("onlineUsers", (users) => {
-
-            setOnlineUsers(users);
-
-        });
-
-        socket.on("typing", () => {
-
-            setTyping(true);
-
-        });
-
-        socket.on("stopTyping", () => {
-
-            setTyping(false);
-
-        });
-
-        socket.on("messagesRead", ({ messageIds }) => {
-
-            setMessages(prev =>
-                prev.map(message =>
-                    messageIds.includes(message._id)
-                        ? {
-                              ...message,
-                              read: true
-                          }
-                        : message
-                )
-            );
-
-        });
-
-        return () => {
-
-            socket.off("receiveMessage");
-            socket.off("onlineUsers");
-            socket.off("typing");
-            socket.off("stopTyping");
-            socket.off("messagesRead");
-
-            socket.disconnect();
-
-        };
-
-    }, []);
-
-    // ==================================
-    // Auto Scroll
-    // ==================================
-    useEffect(() => {
-
-        bottomRef.current?.scrollIntoView({
-
-            behavior: "smooth"
-
-        });
-
-    }, [messages, typing]);
-
-    // ==================================
-    // Load Conversation
-    // ==================================
     const loadConversation = async () => {
 
         try {
 
-            const data = await getConversation(userId);
+            const data =
+                await getConversation(userId);
 
             setUser(data.user);
 
@@ -154,9 +96,116 @@ function Chat() {
 
     };
 
-    // ==================================
+    // ==========================
+    // Socket Connection
+    // ==========================
+
+    useEffect(() => {
+
+        socket.connect();
+
+        socket.emit(
+            "join",
+            currentUser.id
+        );
+
+        socket.on(
+            "receiveMessage",
+            (message) => {
+
+                if (
+                    message.sender === userId ||
+                    message.sender?._id === userId
+                ) {
+
+                    setMessages(previous => [
+
+                        ...previous,
+
+                        message
+
+                    ]);
+
+                }
+
+            }
+        );
+
+        socket.on(
+            "onlineUsers",
+            (users) => {
+
+                setOnlineUsers(users);
+
+            }
+        );
+
+        socket.on(
+            "typing",
+            () => {
+
+                setTyping(true);
+
+            }
+        );
+
+        socket.on(
+            "stopTyping",
+            () => {
+
+                setTyping(false);
+
+            }
+        );
+
+        socket.on(
+            "messagesRead",
+            ({ messageIds }) => {
+
+                setMessages(previous =>
+
+                    previous.map(message =>
+
+                        messageIds.includes(
+                            message._id
+                        )
+
+                            ? {
+                                ...message,
+                                read: true
+                            }
+
+                            : message
+
+                    )
+
+                );
+
+            }
+        );
+
+        return () => {
+
+            socket.off("receiveMessage");
+
+            socket.off("onlineUsers");
+
+            socket.off("typing");
+
+            socket.off("stopTyping");
+
+            socket.off("messagesRead");
+
+            socket.disconnect();
+
+        };
+
+    }, []);
+
+        // ==========================
     // Typing
-    // ==================================
+    // ==========================
+
     const handleTyping = (value) => {
 
         setText(value);
@@ -185,335 +234,589 @@ function Chat() {
 
     };
 
-    // ==================================
-// Send Message
-// ==================================
-const handleSend = async () => {
+    // ==========================
+    // Image Selection
+    // ==========================
 
-    if (!text.trim()) return;
+    const handleImageSelect = (e) => {
 
-    try {
+        const file = e.target.files[0];
 
-        const response = await sendMessage(
+        if (!file) return;
 
-            userId,
+        setSelectedImage(file);
 
-            text
+        setImagePreview(
 
-        );
-
-        setMessages(prev => [
-
-            ...prev,
-
-            response.newMessage
-
-        ]);
-
-        socket.emit(
-
-            "sendMessage",
-
-            response.newMessage
+            URL.createObjectURL(file)
 
         );
 
-        socket.emit("stopTyping", {
+    };
 
-            sender: currentUser.id,
+    // ==========================
+    // Remove Selected Image
+    // ==========================
 
-            receiver: userId
+    const removeSelectedImage = () => {
 
-        });
+        setSelectedImage(null);
 
-        setText("");
+        setImagePreview("");
 
-    }
+        if (fileInputRef.current) {
 
-    catch (error) {
+            fileInputRef.current.value = "";
 
-        console.log(error);
+        }
 
-    }
+    };
 
-};
+    // ==========================
+    // Send Message
+    // ==========================
 
-const isOnline = onlineUsers.includes(userId);
+    const handleSend = async () => {
 
-return (
+        if (!text.trim() && !selectedImage) {
 
-<div className="max-w-6xl mx-auto px-2 sm:px-4">
+            return;
 
-<div className="bg-white rounded-3xl shadow-2xl overflow-hidden h-[82vh] sm:h-[84vh] flex flex-col">
+        }
 
-{/* ================= Header ================= */}
+        try {
 
-<div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white px-4 sm:px-6 py-4 flex items-center justify-between shadow-md">
+            const response = await sendMessage(
 
-<div className="flex items-center gap-4">
+                userId,
 
-{
+                text,
 
-user?.profilePhoto ?
+                selectedImage
 
-(
+            );
 
-<img
+            setMessages(previous => [
 
-src={`http://localhost:5000${user.profilePhoto}`}
+                ...previous,
 
-alt="Profile"
+                response.newMessage
 
-className="w-14 h-14 rounded-full object-cover border-2 border-white"
+            ]);
 
-/>
+            socket.emit(
 
-)
+                "sendMessage",
 
-:
+                response.newMessage
 
-(
+            );
 
-<div className="w-14 h-14 rounded-full bg-white text-pink-600 flex items-center justify-center text-2xl font-bold">
+            socket.emit("stopTyping", {
 
-{user?.firstName?.charAt(0)}
+                sender: currentUser.id,
 
-</div>
+                receiver: userId
 
-)
+            });
 
-}
+            setText("");
 
-<div>
+            removeSelectedImage();
 
-<h2 className="font-bold text-xl">
+            setShowEmojiPicker(false);
 
-{user?.firstName} {user?.lastName}
+        }
 
-</h2>
+        catch (error) {
 
-<div className="flex items-center gap-2 mt-1">
+            console.log(error);
 
-<FaCircle
+        }
 
-className={`text-[10px] ${
+    };
 
-isOnline
+    // ==========================
+    // Helpers
+    // ==========================
 
-? "text-green-300"
+    const isOnline =
 
-: "text-gray-300"
+        onlineUsers.includes(userId);
 
-}`}
+    return (
 
-/>
+        <div className="max-w-6xl mx-auto px-2 sm:px-4">
 
-<span className="text-sm">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden h-[82vh] sm:h-[84vh] flex flex-col">
 
-{isOnline
+                {/* Header */}
 
-? "Online"
+                <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white px-4 sm:px-6 py-4 flex items-center justify-between shadow-md">
 
-: "Offline"}
+                    <div className="flex items-center gap-4">
 
-</span>
+                        {
 
-</div>
+                            user?.profilePhoto
 
-</div>
+                                ?
 
-</div>
+                                (
 
-</div>
+                                    <img
 
-{/* ================= Messages ================= */}
+                                        src={getImageUrl(user.profilePhoto)}
 
-<div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50 via-white to-pink-50 px-3 sm:px-6 py-6 space-y-5">
+                                        alt="Profile"
 
-{
+                                        className="w-14 h-14 rounded-full object-cover border-2 border-white"
 
-messages.map((msg) => {
+                                    />
 
-const mine =
+                                )
 
-msg.sender?._id === currentUser.id ||
+                                :
 
-msg.sender === currentUser.id;
+                                (
 
-return (
+                                    <div className="w-14 h-14 rounded-full bg-white text-pink-600 flex items-center justify-center text-2xl font-bold">
 
-<div
+                                        {
 
-key={msg._id}
+                                            user?.firstName?.charAt(0)
 
-className={`flex ${
+                                        }
 
-mine
+                                    </div>
 
-? "justify-end"
+                                )
 
-: "justify-start"
+                        }
 
-}`}
+                        <div>
 
->
+                            <h2 className="font-bold text-xl">
 
-<div
+                                {user?.firstName} {user?.lastName}
 
-className={`max-w-[85%] sm:max-w-md rounded-3xl px-5 py-3 shadow-md transition hover:shadow-lg ${
+                            </h2>
 
-mine
+                            <div className="flex items-center gap-2 mt-1">
 
-? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
+                                <FaCircle
 
-: "bg-white rounded-bl-md"
+                                    className={`text-[10px] ${
 
-}`}
+                                        isOnline
 
->
+                                            ? "text-green-300"
 
-<p className="leading-relaxed break-words">
+                                            : "text-gray-300"
 
-{msg.message}
+                                    }`}
 
-</p>
+                                />
 
-<div className="flex justify-between items-center mt-3">
+                                <span className="text-sm">
 
-<p
+                                    {
 
-className={`text-xs ${
+                                        isOnline
 
-mine
+                                            ? "Online"
 
-? "text-pink-100"
+                                            : "Offline"
 
-: "text-gray-400"
+                                    }
 
-}`}
+                                </span>
 
->
+                            </div>
 
-{
+                        </div>
 
-new Date(
+                    </div>
 
-msg.createdAt
+                </div>
 
-).toLocaleTimeString(
+                                {/* ================= Messages ================= */}
 
-[],
+                <div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50 via-white to-pink-50 px-3 sm:px-6 py-6 space-y-5">
 
-{
+                    {
 
-hour: "2-digit",
+                        messages.length === 0
 
-minute: "2-digit"
+                            ?
 
-}
+                            (
 
-)
+                                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
 
-}
+                                    <div className="text-6xl mb-4">
 
-</p>
+                                        💬
 
-{
+                                    </div>
 
-mine && (
+                                    <h2 className="text-2xl font-bold">
 
-msg.read ?
+                                        Start the conversation
 
-<FaCheckDouble
+                                    </h2>
 
-className="text-sky-300 text-xs"
+                                    <p className="mt-2">
 
-/>
+                                        Say hello and break the ice.
 
-:
+                                    </p>
 
-<FaCheck
+                                </div>
 
-className="text-pink-100 text-xs"
+                            )
 
-/>
+                            :
 
-)
+                            (
 
-}
+                                messages.map((msg) => {
 
-</div>
+                                    const mine =
 
-</div>
+                                        msg.sender?._id === currentUser.id ||
 
-</div>
+                                        msg.sender === currentUser.id;
 
-);
+                                    return (
 
-})
+                                        <div
 
-}
+                                            key={msg._id}
 
-{
+                                            className={`flex ${
 
-typing && (
+                                                mine
 
-<div className="flex">
+                                                    ? "justify-end"
 
-<div className="bg-white rounded-full px-5 py-2 shadow text-gray-500 italic animate-pulse">
+                                                    : "justify-start"
 
-💬 {user?.firstName} is typing...
+                                            }`}
 
-</div>
+                                        >
 
-</div>
+                                            <div
 
-)
+                                                className={`max-w-[85%] sm:max-w-md rounded-3xl px-5 py-3 shadow-md transition hover:shadow-lg ${
 
-}
+                                                    mine
 
-<div ref={bottomRef}></div>
+                                                        ? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
 
-</div>
+                                                        : "bg-white rounded-bl-md"
+
+                                                }`}
+
+                                            >
+
+                                                {
+
+                                                    msg.image && (
+
+                                                        <img
+
+                                                            src={getImageUrl(msg.image)}
+
+                                                            alt="Message"
+
+                                                            onClick={() =>
+
+                                                                setFullscreenImage(
+
+                                                                    getImageUrl(msg.image)
+
+                                                                )
+
+                                                            }
+
+                                                            className="rounded-2xl mb-3 max-w-xs cursor-pointer hover:scale-105 transition shadow-lg"
+
+                                                        />
+
+                                                    )
+
+                                                }
+
+                                                {
+
+                                                    msg.message && (
+
+                                                        <p className="leading-relaxed break-words">
+
+                                                            {msg.message}
+
+                                                        </p>
+
+                                                    )
+
+                                                }
+
+                                                <div className="flex justify-between items-center mt-3">
+
+                                                    <p
+
+                                                        className={`text-xs ${
+
+                                                            mine
+
+                                                                ? "text-pink-100"
+
+                                                                : "text-gray-400"
+
+                                                        }`}
+
+                                                    >
+
+                                                        {
+
+                                                            new Date(
+
+                                                                msg.createdAt
+
+                                                            ).toLocaleTimeString(
+
+                                                                [],
+
+                                                                {
+
+                                                                    hour: "2-digit",
+
+                                                                    minute: "2-digit"
+
+                                                                }
+
+                                                            )
+
+                                                        }
+
+                                                    </p>
+
+                                                    {
+
+                                                        mine && (
+
+                                                            msg.read
+
+                                                                ?
+
+                                                                <FaCheckDouble className="text-sky-300 text-xs" />
+
+                                                                :
+
+                                                                <FaCheck className="text-pink-100 text-xs" />
+
+                                                        )
+
+                                                    }
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    );
+
+                                })
+
+                            )
+
+                    }
+
+                    {
+
+                        typing && (
+
+                            <div className="flex">
+
+                                <div className="bg-white rounded-full px-5 py-2 shadow text-gray-500 italic animate-pulse">
+
+                                    💬 {user?.firstName} is typing...
+
+                                </div>
+
+                            </div>
+
+                        )
+
+                    }
+
+                    <div ref={bottomRef}></div>
+
+                </div>
+
+                {/* ================= Image Preview ================= */}
+
+                {
+
+                    imagePreview && (
+
+                        <div className="border-t bg-pink-50 px-5 py-4">
+
+                            <div className="relative inline-block">
+
+                                <img
+
+                                    src={imagePreview}
+
+                                    alt="Preview"
+
+                                    className="w-36 h-36 rounded-xl object-cover border shadow"
+
+                                />
+
+                                <button
+
+                                    onClick={removeSelectedImage}
+
+                                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow"
+
+                                >
+
+                                    <FaTimes />
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    )
+
+                }
+
+                                {/* ================= Hidden File Input ================= */}
+
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                />
 
                 {/* ================= Input Area ================= */}
 
                 <div className="border-t bg-white px-3 sm:px-5 py-4">
 
-                    <div className="flex items-center gap-3">
+                    <div className="relative flex items-center gap-3">
 
                         {/* Emoji Button */}
 
-                        <button
-                            type="button"
-                            className="hidden sm:flex w-11 h-11 rounded-full hover:bg-pink-100 items-center justify-center transition"
-                        >
-                            <FaSmile className="text-pink-600 text-lg" />
-                        </button>
+                        <div className="relative hidden sm:block">
 
-                        {/* Attachment Button */}
+                            <button
+
+                                type="button"
+
+                                onClick={() =>
+
+                                    setShowEmojiPicker(
+
+                                        !showEmojiPicker
+
+                                    )
+
+                                }
+
+                                className="w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 flex items-center justify-center transition shadow-sm"
+
+                            >
+
+                                <FaSmile className="text-pink-600 text-xl" />
+
+                            </button>
+
+                            {
+
+                                showEmojiPicker && (
+
+                                    <div className="absolute bottom-14 left-0 z-50">
+
+                                        <EmojiPicker
+
+                                            onEmojiClick={(emojiData) => {
+
+                                                setText(
+
+                                                    previous =>
+
+                                                        previous +
+
+                                                        emojiData.emoji
+
+                                                );
+
+                                            }}
+
+                                        />
+
+                                    </div>
+
+                                )
+
+                            }
+
+                        </div>
+
+                        {/* Attachment */}
 
                         <button
+
                             type="button"
-                            className="hidden sm:flex w-11 h-11 rounded-full hover:bg-pink-100 items-center justify-center transition"
+
+                            onClick={() =>
+
+                                fileInputRef.current.click()
+
+                            }
+
+                            className="hidden sm:flex w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 items-center justify-center transition shadow-sm"
+
                         >
-                            <FaPaperclip className="text-pink-600 text-lg" />
+
+                            <FaPaperclip className="text-pink-600 text-xl" />
+
                         </button>
 
                         {/* Message Input */}
 
                         <input
+
                             type="text"
+
                             value={text}
+
                             placeholder="Type your message..."
 
                             onChange={(e) =>
+
                                 handleTyping(e.target.value)
+
                             }
 
                             onKeyDown={(e) => {
 
-                                if (e.key === "Enter") {
+                                if (
+
+                                    e.key === "Enter" &&
+
+                                    !e.shiftKey
+
+                                ) {
+
+                                    e.preventDefault();
 
                                     handleSend();
 
@@ -525,22 +828,36 @@ typing && (
 
                         />
 
-                        {/* Send Button */}
+                        {/* Send */}
 
                         <button
 
                             onClick={handleSend}
 
-                            disabled={!text.trim()}
+                            disabled={
+
+                                !text.trim() &&
+
+                                !selectedImage
+
+                            }
 
                             className={`rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg
 
                             ${
-                                text.trim()
 
-                                    ? "bg-pink-600 hover:bg-pink-700 hover:scale-105 text-white"
+                                text.trim() ||
 
-                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                selectedImage
+
+                                    ?
+
+                                    "bg-pink-600 hover:bg-pink-700 hover:scale-105 text-white"
+
+                                    :
+
+                                    "bg-gray-300 text-gray-500 cursor-not-allowed"
+
                             }`}
 
                         >
@@ -554,6 +871,50 @@ typing && (
                 </div>
 
             </div>
+
+            {/* ================= Fullscreen Image ================= */}
+
+            {
+
+                fullscreenImage && (
+
+                    <div
+
+                        className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-6"
+
+                        onClick={() =>
+
+                            setFullscreenImage("")
+
+                        }
+
+                    >
+
+                        <button
+
+                            className="absolute top-6 right-6 text-white text-3xl hover:text-pink-400 transition"
+
+                        >
+
+                            <FaTimes />
+
+                        </button>
+
+                        <img
+
+                            src={fullscreenImage}
+
+                            alt="Full Size"
+
+                            className="max-w-full max-h-full rounded-xl shadow-2xl"
+
+                        />
+
+                    </div>
+
+                )
+
+            }
 
         </div>
 

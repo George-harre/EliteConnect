@@ -14,12 +14,35 @@ const messageSchema = new mongoose.Schema(
             required: true
         },
 
+        // ===============================
+        // Text Message
+        // ===============================
         message: {
             type: String,
-            required: true,
-            trim: true
+            trim: true,
+            default: ""
         },
 
+        // ===============================
+        // Image Attachment
+        // ===============================
+        image: {
+            type: String,
+            default: ""
+        },
+
+        // ===============================
+        // Message Type
+        // ===============================
+        messageType: {
+            type: String,
+            enum: ["text", "image", "text-image"],
+            default: "text"
+        },
+
+        // ===============================
+        // Read Status
+        // ===============================
         read: {
             type: Boolean,
             default: false

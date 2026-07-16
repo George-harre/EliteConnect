@@ -1,61 +1,41 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
     registerUser,
     loginUser,
+    verifyEmail,
     getProfile,
     updateProfile,
     uploadProfilePhoto,
     getUsers,
+    getMatches,
     getDashboardStats
 } = require("../controllers/userController");
 
 const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
-const {
-    validateRegister,
-    handleValidationErrors
-} = require("../validators/userValidator");
-
-// ===============================
+// ===================================
 // Public Routes
-// ===============================
+// ===================================
 
-// Register User
-router.post(
-    "/register",
-    validateRegister,
-    handleValidationErrors,
-    registerUser
-);
+router.post("/register", registerUser);
 
-// Login User
 router.post("/login", loginUser);
 
-// ===============================
-// Protected Routes
-// ===============================
+// Email Verification
+router.get("/verify-email/:token", verifyEmail);
 
-// Get Logged-in User Profile
+// ===================================
+// Protected Routes
+// ===================================
+
 router.get("/profile", protect, getProfile);
 
-// Dashboard Statistics
-router.get(
-    "/dashboard-stats",
-    protect,
-    getDashboardStats
-);
+router.put("/profile", protect, updateProfile);
 
-// Update User Profile
-router.put(
-    "/profile",
-    protect,
-    updateProfile
-);
-
-// Upload Profile Photo
 router.put(
     "/profile/photo",
     protect,
@@ -63,11 +43,10 @@ router.put(
     uploadProfilePhoto
 );
 
-// Discover Other Users
-router.get(
-    "/discover",
-    protect,
-    getUsers
-);
+router.get("/discover", protect, getUsers);
+
+router.get("/matches", protect, getMatches);
+
+router.get("/dashboard", protect, getDashboardStats);
 
 module.exports = router;

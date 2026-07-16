@@ -26,7 +26,6 @@ const userSchema = new mongoose.Schema(
         required: true
     },
 
-
     // Professional Information
     occupation: {
         type: String,
@@ -43,13 +42,11 @@ const userSchema = new mongoose.Schema(
         default: ""
     },
 
-
     // Location
     location: {
         type: String,
         default: ""
     },
-
 
     // Dating Profile Information
     age: {
@@ -67,7 +64,6 @@ const userSchema = new mongoose.Schema(
         default: "Other"
     },
 
-
     // Who the user wants to meet
     interestedIn: {
         type: String,
@@ -78,7 +74,6 @@ const userSchema = new mongoose.Schema(
         ],
         default: "Everyone"
     },
-
 
     // Dating intention
     relationshipGoal: {
@@ -93,13 +88,11 @@ const userSchema = new mongoose.Schema(
         default: "Not sure"
     },
 
-
     // About user
     bio: {
         type: String,
         default: ""
     },
-
 
     // User interests for compatibility matching
     interests: {
@@ -107,20 +100,29 @@ const userSchema = new mongoose.Schema(
         default: []
     },
 
-
     // Profile picture
     profilePhoto: {
         type: String,
         default: ""
     },
 
-
-    // Verification system
+    // ===============================
+    // Email Verification
+    // ===============================
     verified: {
         type: Boolean,
         default: false
     },
 
+    verificationToken: {
+        type: String,
+        default: ""
+    },
+
+    verificationTokenExpires: {
+        type: Date,
+        default: null
+    },
 
     // Subscription system
     subscription: {
@@ -136,6 +138,5 @@ const userSchema = new mongoose.Schema(
 {
     timestamps: true
 });
-
 
 module.exports = mongoose.model("User", userSchema);

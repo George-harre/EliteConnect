@@ -14,7 +14,17 @@ const sendMessage = async (req, res) => {
 
         const { receiver, message } = req.body;
 
-        if (!message || message.trim() === "") {
+        const image = req.file
+            ? `/uploads/chat/${req.file.filename}`
+            : "";
+
+        // ===============================
+        // Require either text or image
+        // ===============================
+        if (
+            (!message || message.trim() === "") &&
+            !image
+        ) {
 
             return res.status(400).json({
                 message: "Message cannot be empty."
@@ -22,30 +32,58 @@ const sendMessage = async (req, res) => {
 
         }
 
+        // ===============================
         // Ensure users are matched
+        // ===============================
         const match = await Match.findOne({
+
             users: {
                 $all: [sender, receiver]
             }
+
         });
 
         if (!match) {
 
             return res.status(403).json({
+
                 message: "You can only message your matches."
+
             });
 
         }
 
-        // ===================================
-        // Save Message
-        // ===================================
+        // ===============================
+        // Determine Message Type
+        // ===============================
+        let messageType = "text";
 
+        if (message && image) {
+
+            messageType = "text-image";
+
+        }
+
+        else if (image) {
+
+            messageType = "image";
+
+        }
+
+        // ===============================
+        // Save Message
+        // ===============================
         const newMessage = await Message.create({
 
             sender,
+
             receiver,
-            message
+
+            message: message || "",
+
+            image,
+
+            messageType
 
         });
 
@@ -59,10 +97,9 @@ const sendMessage = async (req, res) => {
             "firstName lastName profilePhoto"
         );
 
-        // ===================================
-        // Create Notification
-        // ===================================
-
+        // ===============================
+        // Notification
+        // ===============================
         const notification = await Notification.create({
 
             recipient: receiver,
@@ -71,7 +108,10 @@ const sendMessage = async (req, res) => {
 
             type: "message",
 
-            text: "sent you a message 💬"
+            text:
+                messageType === "image"
+                    ? "sent you a photo 📷"
+                    : "sent you a message 💬"
 
         });
 
@@ -80,28 +120,19 @@ const sendMessage = async (req, res) => {
             "firstName lastName profilePhoto"
         );
 
-        // ===================================
+        // ===============================
         // Socket.IO
-        // ===================================
-
+        // ===============================
         const io = req.app.get("io");
 
-        // Send live chat only to receiver
         io.to(receiver.toString()).emit(
-
             "receiveMessage",
-
             newMessage
-
         );
 
-        // Send notification only to receiver
         io.to(receiver.toString()).emit(
-
             "newNotification",
-
             notification
-
         );
 
         res.status(201).json({

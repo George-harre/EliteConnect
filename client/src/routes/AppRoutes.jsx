@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home/Home";
 import Register from "../pages/Register/Register";
 import Login from "../pages/Login/Login";
+import VerifyEmail from "../pages/VerifyEmail/VerifyEmail";
+
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Discover from "../pages/Discover/Discover";
 import Matches from "../pages/Matches/Matches";
@@ -38,6 +40,11 @@ function AppRoutes() {
             <Route
                 path="/login"
                 element={<Login />}
+            />
+
+            <Route
+                path="/verify-email/:token"
+                element={<VerifyEmail />}
             />
 
             {/* ===============================

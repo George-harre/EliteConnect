@@ -9,7 +9,8 @@ import {
     FaMapMarkerAlt,
     FaBriefcase,
     FaGraduationCap,
-    FaBullseye
+    FaBullseye,
+    FaSearch
 } from "react-icons/fa";
 
 import { getUsers } from "../../services/userService";
@@ -22,18 +23,67 @@ function Discover() {
 
     const [users, setUsers] = useState([]);
 
+    const [filteredUsers, setFilteredUsers] = useState([]);
+
     const [loading, setLoading] = useState(true);
 
     const [likedUsers, setLikedUsers] = useState([]);
 
     const [selectedUser, setSelectedUser] = useState(null);
 
-    
+    const [filters, setFilters] = useState({
+        search: "",
+        location: "",
+        relationshipGoal: ""
+    });
+
+    useEffect(() => {
+        loadUsers();
+    }, []);
+
     useEffect(() => {
 
-        loadUsers();
+        let results = [...users];
 
-    }, []);
+        if (filters.search) {
+
+            results = results.filter(user =>
+
+                `${user.firstName} ${user.lastName}`
+                    .toLowerCase()
+                    .includes(filters.search.toLowerCase())
+
+            );
+
+        }
+
+        if (filters.location) {
+
+            results = results.filter(user =>
+
+                (user.location || "")
+                    .toLowerCase()
+                    .includes(filters.location.toLowerCase())
+
+            );
+
+        }
+
+        if (filters.relationshipGoal) {
+
+            results = results.filter(
+
+                user =>
+                    user.relationshipGoal ===
+                    filters.relationshipGoal
+
+            );
+
+        }
+
+        setFilteredUsers(results);
+
+    }, [filters, users]);
 
     const loadUsers = async () => {
 
@@ -67,7 +117,7 @@ function Discover() {
 
             alert(response.message);
 
-            setLikedUsers((previous) => [
+            setLikedUsers(previous => [
 
                 ...previous,
 
@@ -107,7 +157,7 @@ function Discover() {
 
     };
 
-    const openProfile = (user) => {
+    const openProfile = user => {
 
         setSelectedUser(user);
 
@@ -157,9 +207,69 @@ function Discover() {
 
             </div>
 
-            {
+            {/* Filters */}
 
-                users.length === 0
+            <div className="bg-white rounded-2xl shadow-md p-5 mb-8">
+
+                <div className="grid md:grid-cols-3 gap-4">
+
+                    <div className="relative">
+
+                        <FaSearch className="absolute left-3 top-3 text-gray-400" />
+
+                        <input
+                            type="text"
+                            placeholder="Search name..."
+                            value={filters.search}
+                            onChange={(e) =>
+                                setFilters({
+                                    ...filters,
+                                    search: e.target.value
+                                })
+                            }
+                            className="w-full border rounded-lg pl-10 pr-4 py-2"
+                        />
+
+                    </div>
+
+                    <input
+                        type="text"
+                        placeholder="Location"
+                        value={filters.location}
+                        onChange={(e) =>
+                            setFilters({
+                                ...filters,
+                                location: e.target.value
+                            })
+                        }
+                        className="border rounded-lg px-4 py-2"
+                    />
+
+                    <select
+                        value={filters.relationshipGoal}
+                        onChange={(e) =>
+                            setFilters({
+                                ...filters,
+                                relationshipGoal: e.target.value
+                            })
+                        }
+                        className="border rounded-lg px-4 py-2"
+                    >
+                        <option value="">All Goals</option>
+                        <option value="Friendship">Friendship</option>
+                        <option value="Dating">Dating</option>
+                        <option value="Long-term Relationship">
+                            Long-term Relationship
+                        </option>
+                        <option value="Marriage">Marriage</option>
+                    </select>
+
+                </div>
+
+            </div>
+                        {
+
+                filteredUsers.length === 0
 
                 ?
 
@@ -169,13 +279,13 @@ function Discover() {
 
                         <h2 className="text-3xl font-bold">
 
-                            No more people nearby.
+                            No people found.
 
                         </h2>
 
                         <p className="text-gray-500 mt-3">
 
-                            Check back later.
+                            Try adjusting your search filters.
 
                         </p>
 
@@ -185,28 +295,36 @@ function Discover() {
 
                 :
 
-                (                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                (
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
 
                         {
 
-                            users.map((user) => (
+                            filteredUsers.map((user) => (
 
                                 <div
+
                                     key={user._id}
+
                                     className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+
                                 >
 
-                                    {/* ===============================
-                                        Profile Photo
-                                    =============================== */}
+                                    {/* Profile Photo */}
 
                                     <div className="relative">
 
                                         <img
-    src={getImageUrl(user.profilePhoto)}
-    alt={user.firstName}
-    className="w-full h-96 object-cover"
-/>
+
+                                            src={getImageUrl(user.profilePhoto)}
+
+                                            alt={user.firstName}
+
+                                            className="w-full h-96 object-cover"
+
+                                        />
+
                                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6">
 
                                             <h2 className="text-white text-3xl font-bold">
@@ -225,9 +343,7 @@ function Discover() {
 
                                     </div>
 
-                                    {/* ===============================
-                                        User Details
-                                    =============================== */}
+                                    {/* User Details */}
 
                                     <div className="p-6 space-y-4">
 
@@ -295,9 +411,7 @@ function Discover() {
 
                                         </div>
 
-                                        {/* ===============================
-                                            Action Buttons
-                                        =============================== */}
+                                        {/* Action Buttons */}
 
                                         <div className="grid grid-cols-2 gap-3 pt-3">
 
@@ -309,7 +423,7 @@ function Discover() {
 
                                                 (
 
-                                                    <div className="bg-pink-100 text-pink-700 rounded-xl py-3 text-center font-bold">
+                                                    <div className="bg-green-100 text-green-700 rounded-xl py-3 text-center font-bold">
 
                                                         💕 Matched
 
@@ -326,8 +440,11 @@ function Discover() {
                                                         onClick={() => handleLike(user._id)}
 
                                                         disabled={
+
                                                             user.isLiked ||
+
                                                             likedUsers.includes(user._id)
+
                                                         }
 
                                                         className={`rounded-xl py-3 font-semibold transition flex items-center justify-center gap-2
@@ -442,13 +559,12 @@ function Discover() {
 
             {
 
-                selectedUser &&            (
+                selectedUser && (
 
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
 
-                    <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden relative max-h-[95vh] overflow-y-auto">
-
-                        {/* Close Button */}
+                        <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden relative max-h-[95vh] overflow-y-auto">
+                                                    {/* Close Button */}
 
                         <button
 
@@ -465,10 +581,14 @@ function Discover() {
                         {/* Profile Image */}
 
                         <img
-    src={getImageUrl(selectedUser.profilePhoto)}
-    alt={selectedUser.firstName}
-    className="w-full h-[450px] object-cover"
-/>
+
+                            src={getImageUrl(selectedUser.profilePhoto)}
+
+                            alt={selectedUser.firstName}
+
+                            className="w-full h-[450px] object-cover"
+
+                        />
 
                         {/* Profile Details */}
 
@@ -631,8 +751,11 @@ function Discover() {
                                             }}
 
                                             disabled={
+
                                                 selectedUser.isLiked ||
+
                                                 likedUsers.includes(selectedUser._id)
+
                                             }
 
                                             className={`rounded-xl py-4 font-semibold transition flex justify-center items-center gap-2
@@ -694,9 +817,7 @@ function Discover() {
                             </div>
 
                         </div>
-
-                    </div>
-
+                                          </div>
                 </div>
 
             )

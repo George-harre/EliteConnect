@@ -17,7 +17,9 @@ export const getConversations = async () => {
 export const getConversation = async (userId) => {
 
     const response = await api.get(
+
         `/messages/${userId}`
+
     );
 
     return response.data;
@@ -25,16 +27,46 @@ export const getConversation = async (userId) => {
 };
 
 // ===============================
-// Send Message
+// Send Message (Text / Image)
 // ===============================
-export const sendMessage = async (receiver, message) => {
+export const sendMessage = async (
+
+    receiver,
+
+    message,
+
+    image = null
+
+) => {
+
+    const formData = new FormData();
+
+    formData.append("receiver", receiver);
+
+    formData.append("message", message);
+
+    if (image) {
+
+        formData.append("image", image);
+
+    }
 
     const response = await api.post(
+
         "/messages",
+
+        formData,
+
         {
-            receiver,
-            message
+
+            headers: {
+
+                "Content-Type": "multipart/form-data"
+
+            }
+
         }
+
     );
 
     return response.data;
