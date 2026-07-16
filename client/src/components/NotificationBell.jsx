@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 
@@ -16,6 +16,42 @@ function NotificationBell() {
 
     const [count, setCount] = useState(0);
 
+    // Prevent notification sound on first load
+    const firstLoad = useRef(true);
+
+    // Notification sound
+    const notificationSound = useRef(
+        new Audio("/sounds/notification.mp3")
+    );
+
+    // ===================================
+    // Load Notifications
+    // ===================================
+
+    const loadNotifications = async () => {
+
+        try {
+
+            const data = await getNotifications();
+
+            const unread = data.notifications.filter(
+
+                notification => !notification.read
+
+            );
+
+            setCount(unread.length);
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+        }
+
+    };
+
     useEffect(() => {
 
         if (!currentUser) return;
@@ -32,16 +68,36 @@ function NotificationBell() {
         // ===============================
         // New Notification
         // ===============================
+
         const handleNewNotification = () => {
 
             setCount(previous => previous + 1);
 
+            if (!firstLoad.current) {
+
+                notificationSound.current.currentTime = 0;
+
+                notificationSound.current.play().catch(() => {});
+
+            }
+
         };
 
         // ===============================
-        // Notifications Read
+        // Local Update (when Notifications page is opened)
         // ===============================
-        const handleNotificationsRead = () => {
+
+        const handleNotificationsUpdated = () => {
+
+            loadNotifications();
+
+        };
+
+        // ===============================
+        // Refresh when browser regains focus
+        // ===============================
+
+        const handleWindowFocus = () => {
 
             loadNotifications();
 
@@ -52,10 +108,17 @@ function NotificationBell() {
             handleNewNotification
         );
 
-        socket.on(
-            "notificationsRead",
-            handleNotificationsRead
+        window.addEventListener(
+            "notificationsUpdated",
+            handleNotificationsUpdated
         );
+
+        window.addEventListener(
+            "focus",
+            handleWindowFocus
+        );
+
+        firstLoad.current = false;
 
         return () => {
 
@@ -64,42 +127,19 @@ function NotificationBell() {
                 handleNewNotification
             );
 
-            socket.off(
-                "notificationsRead",
-                handleNotificationsRead
+            window.removeEventListener(
+                "notificationsUpdated",
+                handleNotificationsUpdated
+            );
+
+            window.removeEventListener(
+                "focus",
+                handleWindowFocus
             );
 
         };
 
     }, []);
-
-    const loadNotifications = async () => {
-
-        try {
-
-            const data =
-                await getNotifications();
-
-            const unread =
-                data.notifications.filter(
-
-                    notification => !notification.read
-
-                );
-
-            setCount(
-                unread.length
-            );
-
-        }
-
-        catch (error) {
-
-            console.log(error);
-
-        }
-
-    };
 
     return (
 
@@ -109,28 +149,30 @@ function NotificationBell() {
         >
 
             <FaBell
-                className="text-2xl"
+                className="text-2xl hover:text-pink-600 transition duration-300"
             />
 
             {
 
-                count > 0 &&
+                count > 0 && (
 
-                <span
-                    className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                >
+                    <span
+                        className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center font-bold animate-pulse shadow-lg"
+                    >
 
-                    {
+                        {
 
-                        count > 99
+                            count > 99
 
-                        ? "99+"
+                                ? "99+"
 
-                        : count
+                                : count
 
-                    }
+                        }
 
-                </span>
+                    </span>
+
+                )
 
             }
 
