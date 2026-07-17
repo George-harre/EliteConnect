@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { FaComments } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { FaComments, FaCircle } from "react-icons/fa";
 
 import { getConversations } from "../../services/messageService";
 import { getImageUrl } from "../../utils/imageUrl";
 
 function Messages() {
 
+    const navigate = useNavigate();
+
     const [conversations, setConversations] = useState([]);
+
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -62,6 +65,8 @@ function Messages() {
 
         <div className="max-w-6xl mx-auto px-4 md:px-6">
 
+            {/* Header */}
+
             <div className="mb-10">
 
                 <h1 className="text-4xl font-bold flex items-center gap-3">
@@ -82,9 +87,7 @@ function Messages() {
 
             {
 
-                conversations.length === 0
-
-                ? (
+                conversations.length === 0 ? (
 
                     <div className="bg-white rounded-3xl shadow-xl p-16 text-center">
 
@@ -103,15 +106,14 @@ function Messages() {
                         <p className="text-gray-500 mt-4">
 
                             Once you match with someone,
+
                             your conversations will appear here.
 
                         </p>
 
                     </div>
 
-                )
-
-                : (
+                ) : (
 
                     <div className="space-y-5">
 
@@ -119,81 +121,115 @@ function Messages() {
 
                             conversations.map((conversation) => (
 
-                                <Link
+                                <div
 
                                     key={conversation.matchId}
 
-                                    to={`/messages/${conversation.user._id}`}
-
-                                    className="block"
+                                    className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.01] transition-all duration-300 p-5 flex items-center gap-5"
 
                                 >
 
-                                    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.01] transition-all duration-300 p-5 flex items-center gap-5">
+                                    {/* Clickable Profile Photo */}
 
-                                        {
+                                    {
 
-                                            conversation.user.profilePhoto
+                                        conversation.user.profilePhoto ?
 
-                                            ? (
+                                        (
 
-                                                <img
+                                            <img
 
-                                                    src={getImageUrl(conversation.user.profilePhoto)}
+                                                src={getImageUrl(conversation.user.profilePhoto)}
 
-                                                    alt={`${conversation.user.firstName} ${conversation.user.lastName}`}
+                                                alt={`${conversation.user.firstName} ${conversation.user.lastName}`}
 
-                                                    className="w-16 h-16 rounded-full object-cover border-2 border-pink-300"
+                                                onClick={() =>
 
-                                                />
-
-                                            )
-
-                                            : (
-
-                                                <div className="w-16 h-16 rounded-full bg-pink-500 text-white flex items-center justify-center text-2xl font-bold">
-
-                                                    {
-
-                                                        conversation.user.firstName.charAt(0)
-
-                                                    }
-
-                                                </div>
-
-                                            )
-
-                                        }
-
-                                        <div className="flex-1 min-w-0">
-
-                                            <h2 className="text-xl font-bold">
-
-                                                {conversation.user.firstName}{" "}
-
-                                                {conversation.user.lastName}
-
-                                            </h2>
-
-                                            <p className="text-gray-500 mt-1 truncate">
-
-                                                {
-
-                                                    conversation.lastMessage ||
-
-                                                    "Start chatting..."
+                                                    navigate(`/profile/${conversation.user._id}`)
 
                                                 }
 
-                                            </p>
+                                                className="w-16 h-16 rounded-full object-cover border-2 border-pink-300 cursor-pointer hover:scale-110 transition"
 
-                                        </div>
+                                            />
+
+                                        )
+
+                                        :
+
+                                        (
+
+                                            <div
+
+                                                onClick={() =>
+
+                                                    navigate(`/profile/${conversation.user._id}`)
+
+                                                }
+
+                                                className="w-16 h-16 rounded-full bg-pink-500 text-white flex items-center justify-center text-2xl font-bold cursor-pointer hover:scale-110 transition"
+
+                                            >
+
+                                                {
+
+                                                    conversation.user.firstName.charAt(0)
+
+                                                }
+
+                                            </div>
+
+                                        )
+
+                                    }
+
+                                    {/* Conversation Info */}
+
+                                    <div className="flex-1 min-w-0">
+
+                                        {/* Clickable Name */}
+
+                                        <h2
+
+                                            onClick={() =>
+
+                                                navigate(`/profile/${conversation.user._id}`)
+
+                                            }
+
+                                            className="text-xl font-bold cursor-pointer hover:text-pink-600 transition"
+
+                                        >
+
+                                            {conversation.user.firstName}{" "}
+
+                                            {conversation.user.lastName}
+
+                                        </h2>
+
+                                        <p className="text-gray-500 mt-1 truncate">
+
+                                            {
+
+                                                conversation.lastMessage ||
+
+                                                "Start chatting..."
+
+                                            }
+
+                                        </p>
+
+                                    </div>
+
+                                    {/* Right Side */}
+
+                                    <div className="flex flex-col items-end gap-2">
 
                                         {
 
                                             conversation.lastMessageTime && (
 
-                                                <div className="text-sm text-gray-400 whitespace-nowrap">
+                                                <div className="text-sm text-gray-400">
 
                                                     {
 
@@ -223,9 +259,25 @@ function Messages() {
 
                                         }
 
+                                        {/* Open Chat */}
+
+                                        <Link
+
+                                            to={`/messages/${conversation.user._id}`}
+
+                                            className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-xl transition flex items-center gap-2"
+
+                                        >
+
+                                            <FaComments />
+
+                                            Chat
+
+                                        </Link>
+
                                     </div>
 
-                                </Link>
+                                </div>
 
                             ))
 

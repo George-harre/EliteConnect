@@ -13,6 +13,7 @@ import Chat from "../pages/Chat/Chat";
 import Notifications from "../pages/Notifications/Notifications";
 import EditProfile from "../pages/EditProfile/EditProfile";
 import LikesReceived from "../pages/LikesReceived/LikesReceived";
+import Profile from "../pages/Profile/Profile";
 
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../layouts/MainLayout";
@@ -98,6 +99,10 @@ function AppRoutes() {
                     path="/edit-profile"
                     element={<EditProfile />}
                 />
+                <Route
+    path="/profile/:userId"
+    element={<Profile />}
+/>
 
             </Route>
 

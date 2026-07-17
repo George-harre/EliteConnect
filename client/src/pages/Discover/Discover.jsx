@@ -316,23 +316,20 @@ function Discover() {
                                     <div className="relative">
 
                                         <img
-
-                                            src={getImageUrl(user.profilePhoto)}
-
-                                            alt={user.firstName}
-
-                                            className="w-full h-96 object-cover"
-
-                                        />
+    src={getImageUrl(user.profilePhoto)}
+    alt={user.firstName}
+    onClick={() => navigate(`/profile/${user._id}`)}
+    className="cursor-pointer hover:scale-105 transition duration-300 ..."
+/>
 
                                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6">
 
-                                            <h2 className="text-white text-3xl font-bold">
-
-                                                {user.firstName} {user.lastName}
-
-                                            </h2>
-
+                                           <h2
+    onClick={() => navigate(`/profile/${user._id}`)}
+    className="text-xl font-bold text-white cursor-pointer hover:text-pink-600 transition"
+>
+    {user.firstName} {user.lastName}
+</h2>
                                             <p className="text-white">
 
                                                 {user.age || "Age not provided"} years

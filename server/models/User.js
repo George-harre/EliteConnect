@@ -26,7 +26,10 @@ const userSchema = new mongoose.Schema(
         required: true
     },
 
+    // ===============================
     // Professional Information
+    // ===============================
+
     occupation: {
         type: String,
         default: ""
@@ -42,13 +45,19 @@ const userSchema = new mongoose.Schema(
         default: ""
     },
 
+    // ===============================
     // Location
+    // ===============================
+
     location: {
         type: String,
         default: ""
     },
 
-    // Dating Profile Information
+    // ===============================
+    // Dating Profile
+    // ===============================
+
     age: {
         type: Number,
         default: null
@@ -64,7 +73,6 @@ const userSchema = new mongoose.Schema(
         default: "Other"
     },
 
-    // Who the user wants to meet
     interestedIn: {
         type: String,
         enum: [
@@ -75,7 +83,6 @@ const userSchema = new mongoose.Schema(
         default: "Everyone"
     },
 
-    // Dating intention
     relationshipGoal: {
         type: String,
         enum: [
@@ -88,27 +95,34 @@ const userSchema = new mongoose.Schema(
         default: "Not sure"
     },
 
-    // About user
     bio: {
         type: String,
         default: ""
     },
 
-    // User interests for compatibility matching
     interests: {
         type: [String],
         default: []
     },
 
-    // Profile picture
+    // ===============================
+    // Photos
+    // ===============================
+
     profilePhoto: {
         type: String,
         default: ""
     },
 
+    gallery: {
+        type: [String],
+        default: []
+    },
+
     // ===============================
-    // Email Verification
+    // Account
     // ===============================
+
     verified: {
         type: Boolean,
         default: false
@@ -124,7 +138,6 @@ const userSchema = new mongoose.Schema(
         default: null
     },
 
-    // Subscription system
     subscription: {
         type: String,
         enum: [
@@ -132,6 +145,29 @@ const userSchema = new mongoose.Schema(
             "Premium"
         ],
         default: "Free"
+    },
+
+    // ===============================
+    // Activity
+    // ===============================
+
+    online: {
+        type: Boolean,
+        default: false
+    },
+
+    lastSeen: {
+        type: Date,
+        default: Date.now
+    },
+
+    // ===============================
+    // Profile Completion
+    // ===============================
+
+    profileCompleted: {
+        type: Number,
+        default: 0
     }
 
 },

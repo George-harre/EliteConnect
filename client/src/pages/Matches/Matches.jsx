@@ -12,6 +12,7 @@ import {
 import {
     getMyMatches
 } from "../../services/likeService";
+
 import { getImageUrl } from "../../utils/imageUrl";
 
 function Matches() {
@@ -24,7 +25,6 @@ function Matches() {
 
     const [selectedUser, setSelectedUser] = useState(null);
 
-    
     useEffect(() => {
 
         loadMatches();
@@ -97,9 +97,7 @@ function Matches() {
 
                 matches.length === 0
 
-                ?
-
-                (
+                ? (
 
                     <div className="bg-white rounded-3xl shadow-xl p-16 text-center">
 
@@ -137,9 +135,7 @@ function Matches() {
 
                 )
 
-                :
-
-                (
+                : (
 
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
 
@@ -151,18 +147,43 @@ function Matches() {
 
                                     key={match.matchId}
 
-                                    className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+                                    className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
 
                                 >
 
+                                    {/* Clickable Profile Image */}
+
                                     <img
-    src={getImageUrl(match.user.profilePhoto)}
-    alt="Profile"
-    className="w-full h-96 object-cover"
-/>
+
+                                        src={getImageUrl(match.user.profilePhoto)}
+
+                                        alt={match.user.firstName}
+
+                                        onClick={() =>
+
+                                            navigate(`/profile/${match.user._id}`)
+
+                                        }
+
+                                        className="w-full h-96 object-cover cursor-pointer hover:scale-105 transition duration-300"
+
+                                    />
+
                                     <div className="p-6">
 
-                                        <h2 className="text-3xl font-bold">
+                                        {/* Clickable Name */}
+
+                                        <h2
+
+                                            onClick={() =>
+
+                                                navigate(`/profile/${match.user._id}`)
+
+                                            }
+
+                                            className="text-3xl font-bold cursor-pointer hover:text-pink-600 transition duration-300"
+
+                                        >
 
                                             {match.user.firstName} {match.user.lastName}
 
@@ -172,7 +193,7 @@ function Matches() {
 
                                             <div className="flex items-center gap-3">
 
-                                                <FaBriefcase className="text-pink-600"/>
+                                                <FaBriefcase className="text-pink-600" />
 
                                                 <span>
 
@@ -184,7 +205,7 @@ function Matches() {
 
                                             <div className="flex items-center gap-3">
 
-                                                <FaMapMarkerAlt className="text-pink-600"/>
+                                                <FaMapMarkerAlt className="text-pink-600" />
 
                                                 <span>
 
@@ -196,7 +217,7 @@ function Matches() {
 
                                             <div className="flex items-center gap-3">
 
-                                                <FaHeart className="text-pink-600"/>
+                                                <FaHeart className="text-pink-600" />
 
                                                 <span>
 
@@ -222,7 +243,7 @@ function Matches() {
 
                                             >
 
-                                                <FaComments/>
+                                                <FaComments />
 
                                                 Message
 
@@ -240,7 +261,7 @@ function Matches() {
 
                                             >
 
-                                                <FaEye/>
+                                                <FaEye />
 
                                                 View
 
@@ -262,222 +283,272 @@ function Matches() {
 
             }
 
-            {
+            {/* Profile Modal Starts Below */}
+                        {
 
-                selectedUser &&            (
+                selectedUser && (
 
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
 
-                    <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden relative max-h-[95vh] overflow-y-auto">
+                        <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden relative max-h-[95vh] overflow-y-auto">
 
-                        {/* Close Button */}
-
-                        <button
-
-                            onClick={() => setSelectedUser(null)}
-
-                            className="absolute top-5 right-5 bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition z-20"
-
-                        >
-
-                            ✕
-
-                        </button>
-
-                        {/* Profile Photo */}
-
-                        <img
-    src={getImageUrl(selectedUser.profilePhoto)}
-    alt={selectedUser.firstName}
-    className="w-full h-[450px] object-cover"
-/>
-
-                        {/* Details */}
-
-                        <div className="p-8">
-
-                            <h2 className="text-4xl font-bold">
-
-                                {selectedUser.firstName} {selectedUser.lastName}
-
-                            </h2>
-
-                            <p className="text-gray-500 mt-2">
-
-                                {selectedUser.age || "Age not provided"} years old
-
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-6 mt-8">
-
-                                <div>
-
-                                    <h3 className="font-bold flex items-center gap-2">
-
-                                        <FaMapMarkerAlt className="text-pink-600"/>
-
-                                        Location
-
-                                    </h3>
-
-                                    <p className="mt-2">
-
-                                        {selectedUser.location || "Not provided"}
-
-                                    </p>
-
-                                </div>
-
-                                <div>
-
-                                    <h3 className="font-bold flex items-center gap-2">
-
-                                        <FaBriefcase className="text-pink-600"/>
-
-                                        Occupation
-
-                                    </h3>
-
-                                    <p className="mt-2">
-
-                                        {selectedUser.occupation || "Not provided"}
-
-                                    </p>
-
-                                </div>
-
-                                <div>
-
-                                    <h3 className="font-bold flex items-center gap-2">
-
-                                        ❤️ Relationship Goal
-
-                                    </h3>
-
-                                    <p className="mt-2">
-
-                                        {selectedUser.relationshipGoal || "Not specified"}
-
-                                    </p>
-
-                                </div>
-
-                                <div>
-
-                                    <h3 className="font-bold">
-
-                                        Age
-
-                                    </h3>
-
-                                    <p className="mt-2">
-
-                                        {selectedUser.age || "Not provided"}
-
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            <div className="mt-8">
-
-                                <h3 className="text-xl font-bold">
-
-                                    About
-
-                                </h3>
-
-                                <p className="mt-3 text-gray-700 leading-8">
-
-                                    {
-
-                                        selectedUser.bio ||
-
-                                        "This user hasn't added a bio yet."
-
-                                    }
-
-                                </p>
-
-                            </div>
-
-                            {
-
-                                selectedUser.interests &&
-                                selectedUser.interests.length > 0 &&
-
-                                (
-
-                                    <div className="mt-8">
-
-                                        <h3 className="text-xl font-bold mb-4">
-
-                                            Interests
-
-                                        </h3>
-
-                                        <div className="flex flex-wrap gap-3">
-
-                                            {
-
-                                                selectedUser.interests.map(
-
-                                                    (interest, index) => (
-
-                                                        <span
-
-                                                            key={index}
-
-                                                            className="bg-pink-100 text-pink-700 px-4 py-2 rounded-full"
-
-                                                        >
-
-                                                            {interest}
-
-                                                        </span>
-
-                                                    )
-
-                                                )
-
-                                            }
-
-                                        </div>
-
-                                    </div>
-
-                                )
-
-                            }
+                            {/* Close Button */}
 
                             <button
+
+                                onClick={() => setSelectedUser(null)}
+
+                                className="absolute top-5 right-5 bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition z-20"
+
+                            >
+
+                                ✕
+
+                            </button>
+
+                            {/* Clickable Profile Image */}
+
+                            <img
+
+                                src={getImageUrl(selectedUser.profilePhoto)}
+
+                                alt={selectedUser.firstName}
 
                                 onClick={() => {
 
                                     setSelectedUser(null);
 
-                                    navigate(`/messages/${selectedUser._id}`);
+                                    navigate(`/profile/${selectedUser._id}`);
 
                                 }}
 
-                                className="w-full mt-10 bg-pink-600 hover:bg-pink-700 text-white py-4 rounded-xl text-lg font-semibold flex justify-center items-center gap-3 transition"
+                                className="w-full h-[450px] object-cover cursor-pointer hover:scale-105 transition duration-300"
 
-                            >
+                            />
 
-                                <FaComments />
+                            {/* Details */}
 
-                                Start Conversation
+                            <div className="p-8">
 
-                            </button>
+                                {/* Clickable Name */}
+
+                                <h2
+
+                                    onClick={() => {
+
+                                        setSelectedUser(null);
+
+                                        navigate(`/profile/${selectedUser._id}`);
+
+                                    }}
+
+                                    className="text-4xl font-bold cursor-pointer hover:text-pink-600 transition duration-300"
+
+                                >
+
+                                    {selectedUser.firstName} {selectedUser.lastName}
+
+                                </h2>
+
+                                <p className="text-gray-500 mt-2">
+
+                                    {selectedUser.age || "Age not provided"} years old
+
+                                </p>
+
+                                <div className="grid md:grid-cols-2 gap-6 mt-8">
+
+                                    <div>
+
+                                        <h3 className="font-bold flex items-center gap-2">
+
+                                            <FaMapMarkerAlt className="text-pink-600" />
+
+                                            Location
+
+                                        </h3>
+
+                                        <p className="mt-2">
+
+                                            {selectedUser.location || "Not provided"}
+
+                                        </p>
+
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold flex items-center gap-2">
+
+                                            <FaBriefcase className="text-pink-600" />
+
+                                            Occupation
+
+                                        </h3>
+
+                                        <p className="mt-2">
+
+                                            {selectedUser.occupation || "Not provided"}
+
+                                        </p>
+
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold flex items-center gap-2">
+
+                                            ❤️ Relationship Goal
+
+                                        </h3>
+
+                                        <p className="mt-2">
+
+                                            {selectedUser.relationshipGoal || "Not specified"}
+
+                                        </p>
+
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold">
+
+                                            Age
+
+                                        </h3>
+
+                                        <p className="mt-2">
+
+                                            {selectedUser.age || "Not provided"}
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <div className="mt-8">
+
+                                    <h3 className="text-xl font-bold">
+
+                                        About
+
+                                    </h3>
+
+                                    <p className="mt-3 text-gray-700 leading-8">
+
+                                        {
+
+                                            selectedUser.bio ||
+
+                                            "This user hasn't added a bio yet."
+
+                                        }
+
+                                    </p>
+
+                                </div>
+
+                                {
+
+                                    selectedUser.interests &&
+
+                                    selectedUser.interests.length > 0 && (
+
+                                        <div className="mt-8">
+
+                                            <h3 className="text-xl font-bold mb-4">
+
+                                                Interests
+
+                                            </h3>
+
+                                            <div className="flex flex-wrap gap-3">
+
+                                                {
+
+                                                    selectedUser.interests.map(
+
+                                                        (interest, index) => (
+
+                                                            <span
+
+                                                                key={index}
+
+                                                                className="bg-pink-100 text-pink-700 px-4 py-2 rounded-full"
+
+                                                            >
+
+                                                                {interest}
+
+                                                            </span>
+
+                                                        )
+
+                                                    )
+
+                                                }
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+
+                                }
+
+                                <div className="grid grid-cols-2 gap-4 mt-10">
+
+                                    <button
+
+                                        onClick={() => {
+
+                                            setSelectedUser(null);
+
+                                            navigate(`/profile/${selectedUser._id}`);
+
+                                        }}
+
+                                        className="bg-slate-200 hover:bg-slate-300 py-4 rounded-xl font-semibold flex justify-center items-center gap-3 transition"
+
+                                    >
+
+                                        <FaEye />
+
+                                        Full Profile
+
+                                    </button>
+
+                                    <button
+
+                                        onClick={() => {
+
+                                            setSelectedUser(null);
+
+                                            navigate(`/messages/${selectedUser._id}`);
+
+                                        }}
+
+                                        className="bg-pink-600 hover:bg-pink-700 text-white py-4 rounded-xl font-semibold flex justify-center items-center gap-3 transition"
+
+                                    >
+
+                                        <FaComments />
+
+                                        Message
+
+                                    </button>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
                     </div>
 
-                </div>
-
-            )
+                )
 
             }
 

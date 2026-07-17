@@ -16,6 +16,7 @@ const likeRoutes = require("./routes/likeRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
 const app = express();
 
@@ -127,6 +128,7 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/messages", messageRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/profile", profileRoutes);
 
 // ===============================
 // Home
