@@ -8,7 +8,15 @@ const transporter = nodemailer.createTransport({
 
     secure: false,
 
-    family: 4,   // Force IPv4
+    requireTLS: true,
+
+    connectionTimeout: 30000,
+
+    greetingTimeout: 30000,
+
+    socketTimeout: 30000,
+
+    family: 4,
 
     auth: {
 
@@ -19,5 +27,13 @@ const transporter = nodemailer.createTransport({
     }
 
 });
+
+console.log("=================================");
+console.log("SMTP CONFIG LOADED");
+console.log("Host:", "smtp.gmail.com");
+console.log("Port:", 587);
+console.log("Secure:", false);
+console.log("RequireTLS:", true);
+console.log("=================================");
 
 module.exports = transporter;
