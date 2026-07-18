@@ -141,7 +141,9 @@ function Matches() {
 
                         {
 
-                            matches.map((match) => (
+                            matches
+    .filter(match => match.user)
+    .map((match) => (
 
                                 <div
 

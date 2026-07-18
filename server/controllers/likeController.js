@@ -446,26 +446,22 @@ const getMyMatches = async (req, res) => {
 
         );
 
-        const formattedMatches = matches.map(match => {
+        const formattedMatches = matches
+    .map(match => {
 
-            const otherUser = match.users.find(
+        const otherUser = match.users.find(
+            user => user._id.toString() !== userId.toString()
+        );
 
-                user =>
+        if (!otherUser) return null;
 
-                    user._id.toString() !==
-                    userId.toString()
+        return {
+            matchId: match._id,
+            user: otherUser
+        };
 
-            );
-
-            return {
-
-                matchId: match._id,
-
-                user: otherUser
-
-            };
-
-        });
+    })
+    .filter(Boolean);
 
         res.status(200).json({
 
