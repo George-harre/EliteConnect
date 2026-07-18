@@ -6,17 +6,12 @@ const sendVerificationEmail = async (
     verificationToken
 ) => {
 
-    //TEMPORARY: For testing purposes, log the verification link to the console//
-    console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-console.log("CLIENT_URL:", process.env.CLIENT_URL);
-
     const verificationLink =
         `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
     const mailOptions = {
 
-       from: `"EliteConnect ❤️" <${process.env.EMAIL_FROM}>`,
+        from: `"EliteConnect ❤️" <${process.env.EMAIL_USER}>`,
 
         to: email,
 
@@ -58,19 +53,12 @@ console.log("CLIENT_URL:", process.env.CLIENT_URL);
 
             </div>
 
-            <p style="font-size:15px;">
-                If the button doesn't work, copy and paste this link into your browser:
+            <p>
+                If the button doesn't work, copy this link:
             </p>
 
             <p style="word-break:break-all;color:#2563eb;">
                 ${verificationLink}
-            </p>
-
-            <hr style="margin:40px 0;">
-
-            <p style="font-size:13px;color:#777;">
-                If you didn't create an EliteConnect account,
-                you can safely ignore this email.
             </p>
 
         </div>
