@@ -1549,7 +1549,7 @@ sm:gap-3
 
                         {/* Emoji */}
 
-                        <div className="relative hidden sm:block">
+                        <div className="relative ">
 
                             <button
 
@@ -1638,7 +1638,7 @@ shadow-sm
 
                             }
 
-                            className="hidden sm:flex w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 items-center justify-center transition shadow-sm"
+                            className="flex w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 items-center justify-center transition shadow-sm"
 
                             title="Send Image"
 
@@ -1660,7 +1660,7 @@ shadow-sm
 
                             }
 
-                            className="hidden sm:flex w-11 h-11 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-200 items-center justify-center transition shadow-sm"
+                            className="flex w-11 h-11 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-200 items-center justify-center transition shadow-sm"
 
                             title="Send File"
 
@@ -1686,7 +1686,7 @@ shadow-sm
 
                             }
 
-                            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-sm ${
+                            className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-sm ${
 
                                 recording
 
@@ -1748,32 +1748,7 @@ shadow-sm
 
                             }}
 
-                            className="
-flex-1
-
-bg-pink-50
-
-border
-border-pink-200
-
-rounded-full
-
-px-4
-sm:px-6
-
-py-2.5
-sm:py-3
-
-text-sm
-sm:text-base
-
-outline-none
-
-focus:ring-2
-focus:ring-pink-500
-
-transition
-"
+                            className="flex-1 min-w-0 border-2 border-pink-200 rounded-full px-4 py-2 sm:py-3 focus:outline-none focus:border-pink-500 transition"
                         />
 
                         {/* Send */}
