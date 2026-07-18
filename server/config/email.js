@@ -4,11 +4,9 @@ const transporter = nodemailer.createTransport({
 
     host: "smtp-relay.brevo.com",
 
-    port: 587,
+    port: 2525,
 
     secure: false,
-
-    requireTLS: true,
 
     auth: {
 
@@ -19,11 +17,5 @@ const transporter = nodemailer.createTransport({
     }
 
 });
-
-console.log("=================================");
-console.log("SMTP CONFIG LOADED");
-console.log("Host:", "smtp-relay.brevo.com");
-console.log("Port:", 587);
-console.log("=================================");
 
 module.exports = transporter;
