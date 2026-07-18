@@ -16,7 +16,7 @@ console.log("CLIENT_URL:", process.env.CLIENT_URL);
 
     const mailOptions = {
 
-       from: '"EliteConnect ❤️" <eliteconnect.support@gmail.com>',
+       from: `"EliteConnect ❤️" <${process.env.EMAIL_FROM}>`,
 
         to: email,
 
