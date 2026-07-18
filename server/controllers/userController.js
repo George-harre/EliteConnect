@@ -89,36 +89,49 @@ const registerUser = async (req, res) => {
         console.log("====================================");
 
         // Send verification email
-        await sendVerificationEmail(
+       // Return success immediately
+res.status(201).json({
 
-            savedUser.email,
+    message:
+        "🎉 Account created successfully! Please check your email (and Spam folder) to verify your account.",
 
-            savedUser.firstName,
+    user: {
 
-            savedUser.verificationToken
+        id: savedUser._id,
 
-        );
+        firstName: savedUser.firstName,
 
-        res.status(201).json({
+        lastName: savedUser.lastName,
 
-            message:
-                "Account created successfully. Please check your email to verify your account.",
+        email: savedUser.email,
 
-            user: {
+        verified: savedUser.verified
 
-                id: savedUser._id,
+    }
 
-                firstName: savedUser.firstName,
+});
 
-                lastName: savedUser.lastName,
+// Send verification email in the background
+sendVerificationEmail(
 
-                email: savedUser.email,
+    savedUser.email,
 
-                verified: savedUser.verified
+    savedUser.firstName,
 
-            }
+    savedUser.verificationToken
 
-        });
+)
+.then(() => {
+
+    console.log("✅ Verification email sent.");
+
+})
+.catch((error) => {
+
+    console.error("❌ Failed to send verification email:");
+    console.error(error);
+
+});
 
     }
 
