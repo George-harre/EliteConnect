@@ -27,15 +27,20 @@ const storage = multer.diskStorage({
     filename(req, file, cb) {
 
         const uniqueName =
+
             Date.now() +
+
             "-" +
+
             Math.round(Math.random() * 1e9);
 
         cb(
 
             null,
 
-            uniqueName + path.extname(file.originalname)
+            uniqueName +
+
+            path.extname(file.originalname)
 
         );
 
@@ -44,34 +49,69 @@ const storage = multer.diskStorage({
 });
 
 // ===============================
-// Images only
+// Allow Images & Voice Notes
 // ===============================
 const fileFilter = (req, file, cb) => {
 
+    // Images
     if (file.mimetype.startsWith("image/")) {
 
-        cb(null, true);
+        return cb(null, true);
 
     }
 
-    else {
+    // Voice Notes
+    if (
 
-        cb(
+        file.mimetype === "audio/webm" ||
 
-            new Error("Only image files are allowed."),
+        file.mimetype === "audio/ogg" ||
 
-            false
+        file.mimetype === "audio/mpeg" ||
 
-        );
+        file.mimetype === "audio/mp3" ||
+
+        file.mimetype === "audio/wav" ||
+
+        file.mimetype === "audio/x-wav" ||
+
+        file.mimetype === "audio/mp4" ||
+
+        file.mimetype === "audio/m4a"
+
+    ) {
+
+        return cb(null, true);
 
     }
+
+    cb(
+
+        new Error(
+
+            "Only images and voice notes are allowed."
+
+        ),
+
+        false
+
+    );
 
 };
 
+// ===============================
+// Upload
+// ===============================
 module.exports = multer({
 
     storage,
 
-    fileFilter
+    fileFilter,
+
+    limits: {
+
+        fileSize: 20 * 1024 * 1024 // 20MB
+
+    }
 
 });

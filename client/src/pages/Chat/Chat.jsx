@@ -9,14 +9,19 @@ import {
     FaCheckDouble,
     FaSmile,
     FaPaperclip,
-    FaTimes
+    FaTimes,
+    FaMicrophone,
+    FaStop
 } from "react-icons/fa";
 
 import socket from "../../socket";
 
 import {
     getConversation,
-    sendMessage
+    sendMessage,
+    sendVoiceMessage,
+    sendFileMessage,
+    reactToMessage
 } from "../../services/messageService";
 
 import { getImageUrl } from "../../utils/imageUrl";
@@ -30,23 +35,26 @@ function Chat() {
     );
 
     // ==========================
-    // State
+    // MAIN STATE
     // ==========================
 
     const [user, setUser] = useState(null);
-
     const [messages, setMessages] = useState([]);
-
     const [text, setText] = useState("");
 
     const [onlineUsers, setOnlineUsers] = useState([]);
-
     const [typing, setTyping] = useState(false);
+
+    // ==========================
+    // EMOJI PICKER
+    // ==========================
 
     const [showEmojiPicker, setShowEmojiPicker] =
         useState(false);
 
-    // Image Attachment
+    // ==========================
+    // IMAGE
+    // ==========================
 
     const [selectedImage, setSelectedImage] =
         useState(null);
@@ -54,33 +62,78 @@ function Chat() {
     const [imagePreview, setImagePreview] =
         useState("");
 
-    // Fullscreen Viewer
+    // ==========================
+    // FILE
+    // ==========================
+
+    const [selectedFile, setSelectedFile] =
+        useState(null);
+
+    // ==========================
+    // VOICE
+    // ==========================
+
+    const [recording, setRecording] =
+        useState(false);
+
+    const [voiceBlob, setVoiceBlob] =
+        useState(null);
+
+    const [voicePreview, setVoicePreview] =
+        useState("");
+
+    // ==========================
+    // FULL SCREEN IMAGE
+    // ==========================
 
     const [fullscreenImage, setFullscreenImage] =
         useState("");
 
-    const fileInputRef = useRef(null);
+    // ==========================
+    // MESSAGE REACTIONS
+    // ==========================
 
-    const typingTimeout = useRef(null);
+    const [reactionPicker, setReactionPicker] =
+        useState({
+            visible: false,
+            x: 0,
+            y: 0,
+            messageId: null
+        });
+
+    const reactionEmojis = [
+        "❤️",
+        "😂",
+        "👍",
+        "😮",
+        "😢",
+        "🔥"
+    ];
+
+    // ==========================
+    // REFS
+    // ==========================
 
     const bottomRef = useRef(null);
 
+    const typingTimeout = useRef(null);
+
+    const fileInputRef = useRef(null);
+
+    const fileUploadRef = useRef(null);
+
+    const mediaRecorderRef = useRef(null);
+
+    const audioChunksRef = useRef([]);
     // ==========================
-    // Load Conversation
+    // LOAD CONVERSATION
     // ==========================
-
-    useEffect(() => {
-
-        loadConversation();
-
-    }, [userId]);
 
     const loadConversation = async () => {
 
         try {
 
-            const data =
-                await getConversation(userId);
+            const data = await getConversation(userId);
 
             setUser(data.user);
 
@@ -96,8 +149,28 @@ function Chat() {
 
     };
 
+    useEffect(() => {
+
+        loadConversation();
+
+    }, [userId]);
+
     // ==========================
-    // Socket Connection
+    // AUTO SCROLL
+    // ==========================
+
+    useEffect(() => {
+
+        bottomRef.current?.scrollIntoView({
+
+            behavior: "smooth"
+
+        });
+
+    }, [messages, typing]);
+
+    // ==========================
+    // SOCKET CONNECTION
     // ==========================
 
     useEffect(() => {
@@ -105,18 +178,30 @@ function Chat() {
         socket.connect();
 
         socket.emit(
+
             "join",
+
             currentUser.id
+
         );
 
+        // ======================
+        // Receive Message
+        // ======================
+
         socket.on(
+
             "receiveMessage",
+
             (message) => {
 
-                if (
-                    message.sender === userId ||
-                    message.sender?._id === userId
-                ) {
+                const senderId =
+
+                    message.sender?._id ||
+
+                    message.sender;
+
+                if (senderId === userId) {
 
                     setMessages(previous => [
 
@@ -129,50 +214,75 @@ function Chat() {
                 }
 
             }
+
         );
 
+        // ======================
+        // Online Users
+        // ======================
+
         socket.on(
+
             "onlineUsers",
+
             (users) => {
 
                 setOnlineUsers(users);
 
             }
+
         );
 
+        // ======================
+        // Typing
+        // ======================
+
         socket.on(
+
             "typing",
+
             () => {
 
                 setTyping(true);
 
             }
+
         );
 
         socket.on(
+
             "stopTyping",
+
             () => {
 
                 setTyping(false);
 
             }
+
         );
 
+        // ======================
+        // Read Receipts
+        // ======================
+
         socket.on(
+
             "messagesRead",
+
             ({ messageIds }) => {
 
                 setMessages(previous =>
 
                     previous.map(message =>
 
-                        messageIds.includes(
-                            message._id
-                        )
+                        messageIds.includes(message._id)
 
                             ? {
+
                                 ...message,
+
                                 read: true
+
                             }
 
                             : message
@@ -182,6 +292,35 @@ function Chat() {
                 );
 
             }
+
+        );
+
+        // ======================
+        // Message Reactions
+        // ======================
+
+        socket.on(
+
+            "messageReaction",
+
+            (updatedMessage) => {
+
+                setMessages(previous =>
+
+                    previous.map(message =>
+
+                        message._id === updatedMessage._id
+
+                            ? updatedMessage
+
+                            : message
+
+                    )
+
+                );
+
+            }
+
         );
 
         return () => {
@@ -196,46 +335,171 @@ function Chat() {
 
             socket.off("messagesRead");
 
+            socket.off("messageReaction");
+
             socket.disconnect();
 
         };
 
-    }, []);
+    }, [userId]);
 
-        // ==========================
-    // Typing
+    // ==========================
+    // ONLINE STATUS
+    // ==========================
+
+    const isOnline =
+
+        onlineUsers.includes(userId);
+
+    // ==========================
+    // TYPING
     // ==========================
 
     const handleTyping = (value) => {
 
         setText(value);
 
-        socket.emit("typing", {
+        socket.emit(
 
-            sender: currentUser.id,
+            "typing",
 
-            receiver: userId
-
-        });
-
-        clearTimeout(typingTimeout.current);
-
-        typingTimeout.current = setTimeout(() => {
-
-            socket.emit("stopTyping", {
+            {
 
                 sender: currentUser.id,
 
                 receiver: userId
 
-            });
+            }
 
-        }, 1000);
+        );
+
+        clearTimeout(
+
+            typingTimeout.current
+
+        );
+
+        typingTimeout.current =
+
+            setTimeout(() => {
+
+                socket.emit(
+
+                    "stopTyping",
+
+                    {
+
+                        sender: currentUser.id,
+
+                        receiver: userId
+
+                    }
+
+                );
+
+            }, 1000);
 
     };
 
     // ==========================
-    // Image Selection
+    // OPEN REACTION PICKER
+    // ==========================
+
+    const openReactionPicker = (
+
+        event,
+
+        messageId
+
+    ) => {
+
+        event.preventDefault();
+
+        setReactionPicker({
+
+            visible: true,
+
+            x: event.clientX,
+
+            y: event.clientY - 60,
+
+            messageId
+
+        });
+
+    };
+
+    // ==========================
+    // CLOSE REACTION PICKER
+    // ==========================
+
+    const closeReactionPicker = () => {
+
+        setReactionPicker({
+
+            visible: false,
+
+            x: 0,
+
+            y: 0,
+
+            messageId: null
+
+        });
+
+    };
+
+    // ==========================
+    // SEND REACTION
+    // ==========================
+
+    const handleReaction = async (
+
+        emoji
+
+    ) => {
+
+        try {
+
+            const response =
+
+                await reactToMessage(
+
+                    reactionPicker.messageId,
+
+                    emoji
+
+                );
+
+            setMessages(previous =>
+
+                previous.map(message =>
+
+                    message._id ===
+
+                    response.message._id
+
+                        ? response.message
+
+                        : message
+
+                )
+
+            );
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+        }
+
+        closeReactionPicker();
+
+    };
+        // ==========================
+    // IMAGE
     // ==========================
 
     const handleImageSelect = (e) => {
@@ -254,11 +518,13 @@ function Chat() {
 
     };
 
-    // ==========================
-    // Remove Selected Image
-    // ==========================
-
     const removeSelectedImage = () => {
+
+        if (imagePreview) {
+
+            URL.revokeObjectURL(imagePreview);
+
+        }
 
         setSelectedImage(null);
 
@@ -273,28 +539,202 @@ function Chat() {
     };
 
     // ==========================
-    // Send Message
+    // FILE
+    // ==========================
+
+    const handleFileSelect = (e) => {
+
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        setSelectedFile(file);
+
+    };
+
+    const removeSelectedFile = () => {
+
+        setSelectedFile(null);
+
+        if (fileUploadRef.current) {
+
+            fileUploadRef.current.value = "";
+
+        }
+
+    };
+
+    // ==========================
+    // VOICE RECORDING
+    // ==========================
+
+    const startRecording = async () => {
+
+        try {
+
+            const stream =
+
+                await navigator.mediaDevices.getUserMedia({
+
+                    audio: true
+
+                });
+
+            const recorder =
+
+                new MediaRecorder(stream);
+
+            mediaRecorderRef.current = recorder;
+
+            audioChunksRef.current = [];
+
+            recorder.ondataavailable = (event) => {
+
+                if (event.data.size > 0) {
+
+                    audioChunksRef.current.push(event.data);
+
+                }
+
+            };
+
+            recorder.onstop = () => {
+
+                const blob = new Blob(
+
+                    audioChunksRef.current,
+
+                    {
+
+                        type: "audio/webm"
+
+                    }
+
+                );
+
+                setVoiceBlob(blob);
+
+                setVoicePreview(
+
+                    URL.createObjectURL(blob)
+
+                );
+
+                stream.getTracks().forEach(track =>
+
+                    track.stop()
+
+                );
+
+            };
+
+            recorder.start();
+
+            setRecording(true);
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            alert("Unable to access microphone.");
+
+        }
+
+    };
+
+    const stopRecording = () => {
+
+        if (!mediaRecorderRef.current) return;
+
+        mediaRecorderRef.current.stop();
+
+        setRecording(false);
+
+    };
+
+    const removeVoiceNote = () => {
+
+        if (voicePreview) {
+
+            URL.revokeObjectURL(voicePreview);
+
+        }
+
+        setVoiceBlob(null);
+
+        setVoicePreview("");
+
+    };
+
+    // ==========================
+    // SEND MESSAGE
     // ==========================
 
     const handleSend = async () => {
 
-        if (!text.trim() && !selectedImage) {
-
-            return;
-
-        }
-
         try {
 
-            const response = await sendMessage(
+            let response;
 
-                userId,
+            // File
 
-                text,
+            if (selectedFile) {
 
-                selectedImage
+                response = await sendFileMessage(
 
-            );
+                    userId,
+
+                    selectedFile
+
+                );
+
+            }
+
+            // Voice
+
+            else if (voiceBlob) {
+
+                response = await sendVoiceMessage(
+
+                    userId,
+
+                    voiceBlob
+
+                );
+
+            }
+
+            // Text / Image
+
+            else {
+
+                if (
+
+                    !text.trim() &&
+
+                    !selectedImage
+
+                ) {
+
+                    return;
+
+                }
+
+                response = await sendMessage(
+
+                    userId,
+
+                    text,
+
+                    selectedImage
+
+                );
+
+            }
+
+            // Update UI
 
             setMessages(previous => [
 
@@ -304,25 +744,31 @@ function Chat() {
 
             ]);
 
+            
+
             socket.emit(
 
-                "sendMessage",
+                "stopTyping",
 
-                response.newMessage
+                {
+
+                    sender: currentUser.id,
+
+                    receiver: userId
+
+                }
 
             );
 
-            socket.emit("stopTyping", {
-
-                sender: currentUser.id,
-
-                receiver: userId
-
-            });
+            // Reset
 
             setText("");
 
             removeSelectedImage();
+
+            removeSelectedFile();
+
+            removeVoiceNote();
 
             setShowEmojiPicker(false);
 
@@ -335,24 +781,60 @@ function Chat() {
         }
 
     };
-
-    // ==========================
-    // Helpers
-    // ==========================
-
-    const isOnline =
-
-        onlineUsers.includes(userId);
+        // ==========================================
+    // UI
+    // ==========================================
 
     return (
 
-        <div className="max-w-6xl mx-auto px-2 sm:px-4">
+       <div
+    className="
+        w-full
+        h-screen
+        sm:max-w-6xl
+        sm:mx-auto
+        sm:px-4
+        px-0
+    "
+    onClick={closeReactionPicker}
+>
 
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden h-[82vh] sm:h-[84vh] flex flex-col">
+            <div
+    className="
+        bg-white
+        h-full
+        flex
+        flex-col
+        overflow-hidden
 
-                {/* Header */}
+        rounded-none
 
-                <div className="bg-gradient-to-r from-pink-600 to-rose-500 text-white px-4 sm:px-6 py-4 flex items-center justify-between shadow-md">
+        sm:rounded-3xl
+        sm:shadow-2xl
+        sm:h-[84vh]
+    "
+>
+
+                {/* ================= HEADER ================= */}
+
+                <div className="
+bg-gradient-to-r
+from-pink-600
+to-rose-500
+text-white
+
+px-3
+sm:px-6
+
+py-3
+sm:py-4
+
+flex
+items-center
+justify-between
+
+shadow-md
+">
 
                     <div className="flex items-center gap-4">
 
@@ -370,9 +852,19 @@ function Chat() {
 
                                         alt="Profile"
 
-                                        className="w-14 h-14 rounded-full object-cover border-2 border-white"
+                                        className="
+w-12
+h-12
 
-                                    />
+sm:w-14
+sm:h-14
+
+rounded-full
+object-cover
+border-2
+border-white
+"
+/>
 
                                 )
 
@@ -380,13 +872,23 @@ function Chat() {
 
                                 (
 
-                                    <div className="w-14 h-14 rounded-full bg-white text-pink-600 flex items-center justify-center text-2xl font-bold">
+                                    <div
+    className="
+        w-12 h-12
+        sm:w-14 sm:h-14
+        rounded-full
+        bg-white
+        text-pink-600
+        flex
+        items-center
+        justify-center
+        text-xl
+        sm:text-2xl
+        font-bold
+    "
+>
 
-                                        {
-
-                                            user?.firstName?.charAt(0)
-
-                                        }
+                                        {user?.firstName?.charAt(0)}
 
                                     </div>
 
@@ -396,8 +898,7 @@ function Chat() {
 
                         <div>
 
-                            <h2 className="font-bold text-xl">
-
+                            <h2 className="font-bold text-lg sm:text-xl">
                                 {user?.firstName} {user?.lastName}
 
                             </h2>
@@ -420,15 +921,7 @@ function Chat() {
 
                                 <span className="text-sm">
 
-                                    {
-
-                                        isOnline
-
-                                            ? "Online"
-
-                                            : "Offline"
-
-                                    }
+                                    {isOnline ? "Online" : "Offline"}
 
                                 </span>
 
@@ -440,7 +933,7 @@ function Chat() {
 
                 </div>
 
-                                {/* ================= Messages ================= */}
+                {/* ================= MESSAGES ================= */}
 
                 <div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50 via-white to-pink-50 px-3 sm:px-6 py-6 space-y-5">
 
@@ -484,15 +977,25 @@ function Chat() {
 
                                     const mine =
 
-                                        msg.sender?._id === currentUser.id ||
-
-                                        msg.sender === currentUser.id;
+                                        (msg.sender?._id || msg.sender) === currentUser.id;
 
                                     return (
 
                                         <div
 
                                             key={msg._id}
+
+                                            onContextMenu={(e) =>
+
+                                                openReactionPicker(
+
+                                                    e,
+
+                                                    msg._id
+
+                                                )
+
+                                            }
 
                                             className={`flex ${
 
@@ -508,7 +1011,23 @@ function Chat() {
 
                                             <div
 
-                                                className={`max-w-[85%] sm:max-w-md rounded-3xl px-5 py-3 shadow-md transition hover:shadow-lg ${
+                                                className={`
+max-w-[92%]
+sm:max-w-md
+
+rounded-3xl
+
+px-4
+sm:px-5
+
+py-2
+sm:py-3
+
+shadow-md
+transition
+hover:shadow-lg
+
+${
 
                                                     mine
 
@@ -519,6 +1038,8 @@ function Chat() {
                                                 }`}
 
                                             >
+
+                                                {/* IMAGE */}
 
                                                 {
 
@@ -540,19 +1061,106 @@ function Chat() {
 
                                                             }
 
-                                                            className="rounded-2xl mb-3 max-w-xs cursor-pointer hover:scale-105 transition shadow-lg"
+                                                            className="
+rounded-2xl
+mb-3
 
-                                                        />
+w-full
+max-w-[260px]
+sm:max-w-xs
+
+cursor-pointer
+hover:scale-105
+transition
+shadow-lg
+"
+ />
 
                                                     )
 
                                                 }
 
+                                                {/* VOICE */}
+
+                                                {
+
+                                                    msg.voice && (
+
+                                                        <audio
+
+                                                            controls
+
+                                                            className="w-full mb-2"
+
+                                                        >
+
+                                                            <source
+
+                                                                src={getImageUrl(msg.voice)}
+
+                                                                type="audio/webm"
+
+                                                            />
+
+                                                        </audio>
+
+                                                    )
+
+                                                }
+
+                                                {/* FILE */}
+
+                                                {
+
+                                                    msg.file && (
+
+                                                        <a
+
+                                                            href={getImageUrl(msg.file)}
+
+                                                            target="_blank"
+
+                                                            rel="noreferrer"
+
+                                                            className="
+block
+mb-3
+
+bg-blue-50
+hover:bg-blue-100
+
+rounded-xl
+
+p-3
+
+border
+border-blue-200
+
+transition
+
+text-blue-700
+
+break-all
+text-sm
+sm:text-base
+"
+ >
+
+                                                            📎 {msg.fileName || "Attachment"}
+
+                                                        </a>
+
+                                                    )
+
+                                                }
+
+                                                {/* TEXT */}
+
                                                 {
 
                                                     msg.message && (
 
-                                                        <p className="leading-relaxed break-words">
+                                                        <p className="leading-relaxed break-words text-[15px] sm:text-base">
 
                                                             {msg.message}
 
@@ -561,8 +1169,57 @@ function Chat() {
                                                     )
 
                                                 }
+                                                                                                {/* REACTIONS */}
 
-                                                <div className="flex justify-between items-center mt-3">
+                                                {
+
+                                                    msg.reactions &&
+
+                                                    msg.reactions.length > 0 && (
+
+                                                        <div className="flex gap-1 mt-2 flex-wrap">
+
+                                                            {
+
+                                                                msg.reactions.map((reaction, index) => (
+
+                                                                    <span
+
+                                                                        key={index}
+
+                                                                        className="
+bg-white/90
+border
+rounded-full
+
+px-2
+py-1
+
+text-xs
+sm:text-sm
+
+shadow
+"
+
+                                                                    >
+
+                                                                        {reaction.emoji}
+
+                                                                    </span>
+
+                                                                ))
+
+                                                            }
+
+                                                        </div>
+
+                                                    )
+
+                                                }
+
+                                                {/* TIME + READ RECEIPTS */}
+
+                                               <div className="flex justify-between items-center mt-2">
 
                                                     <p
 
@@ -610,11 +1267,19 @@ function Chat() {
 
                                                                 ?
 
-                                                                <FaCheckDouble className="text-sky-300 text-xs" />
+                                                                <FaCheckDouble
+
+                                                                    className="text-sky-300 text-xs"
+
+                                                                />
 
                                                                 :
 
-                                                                <FaCheck className="text-pink-100 text-xs" />
+                                                                <FaCheck
+
+                                                                    className="text-pink-100 text-xs"
+
+                                                                />
 
                                                         )
 
@@ -634,13 +1299,33 @@ function Chat() {
 
                     }
 
+                    {/* Typing */}
+
                     {
 
                         typing && (
 
                             <div className="flex">
 
-                                <div className="bg-white rounded-full px-5 py-2 shadow text-gray-500 italic animate-pulse">
+                                <div
+className="
+bg-white
+rounded-full
+
+px-4
+sm:px-5
+
+py-2
+
+shadow
+
+text-gray-500
+italic
+animate-pulse
+
+text-sm
+"
+>
 
                                     💬 {user?.firstName} is typing...
 
@@ -652,11 +1337,13 @@ function Chat() {
 
                     }
 
+                    {/* Auto Scroll */}
+
                     <div ref={bottomRef}></div>
 
                 </div>
 
-                {/* ================= Image Preview ================= */}
+                {/* ================= IMAGE PREVIEW ================= */}
 
                 {
 
@@ -672,9 +1359,19 @@ function Chat() {
 
                                     alt="Preview"
 
-                                    className="w-36 h-36 rounded-xl object-cover border shadow"
+                                    className="
+w-28
+h-28
 
-                                />
+sm:w-36
+sm:h-36
+
+rounded-xl
+object-cover
+border
+shadow
+"
+ />
 
                                 <button
 
@@ -696,23 +1393,161 @@ function Chat() {
 
                 }
 
-                                {/* ================= Hidden File Input ================= */}
+                {/* ================= FILE PREVIEW ================= */}
+
+                {
+
+                    selectedFile && (
+
+                        <div className="border-t bg-blue-50 px-3 sm:px-5 py-3 sm:py-4">
+
+                            <div className="
+flex
+items-center
+justify-between
+
+bg-white
+
+rounded-xl
+
+p-3
+sm:p-4
+
+shadow
+
+gap-3
+">
+
+                                <div>
+
+                                    <p className="font-semibold">
+
+                                        📎 {selectedFile.name}
+
+                                    </p>
+
+                                    <p className="text-sm text-gray-500">
+
+                                        {(selectedFile.size / 1024).toFixed(1)} KB
+
+                                    </p>
+
+                                </div>
+
+                                <button
+
+                                    onClick={removeSelectedFile}
+
+                                    className="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center"
+
+                                >
+
+                                    <FaTimes />
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    )
+
+                }
+
+                {/* ================= VOICE PREVIEW ================= */}
+
+                {
+
+                    voicePreview && (
+
+                        <div className="border-t bg-pink-50 px-3 sm:px-5 py-3 sm:py-4">
+
+                            <div className="flex items-center gap-2 sm:gap-4">
+
+                                <audio
+
+                                    controls
+
+                                    src={voicePreview}
+
+                                    className="flex-1"
+
+                                />
+
+                                <button
+
+                                    onClick={removeVoiceNote}
+
+                                    className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center"
+
+                                >
+
+                                    <FaTimes />
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    )
+
+                }
+                                {/* ================= HIDDEN INPUTS ================= */}
 
                 <input
+
                     ref={fileInputRef}
+
                     type="file"
+
                     accept="image/*"
+
                     onChange={handleImageSelect}
+
                     className="hidden"
+
                 />
 
-                {/* ================= Input Area ================= */}
+                <input
 
-                <div className="border-t bg-white px-3 sm:px-5 py-4">
+                    ref={fileUploadRef}
 
-                    <div className="relative flex items-center gap-3">
+                    type="file"
 
-                        {/* Emoji Button */}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt"
+
+                    onChange={handleFileSelect}
+
+                    className="hidden"
+
+                />
+
+                {/* ================= INPUT AREA ================= */}
+
+                <div className="
+border-t
+
+bg-white
+
+px-2
+sm:px-5
+
+py-2
+sm:py-4
+">
+
+                    <div className="
+relative
+
+flex
+items-center
+
+gap-2
+sm:gap-3
+">
+
+                        {/* Emoji */}
 
                         <div className="relative hidden sm:block">
 
@@ -730,7 +1565,28 @@ function Chat() {
 
                                 }
 
-                                className="w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 flex items-center justify-center transition shadow-sm"
+                                className="
+w-10
+h-10
+
+sm:w-11
+sm:h-11
+
+rounded-full
+
+bg-pink-100
+hover:bg-pink-200
+
+border
+border-pink-200
+
+flex
+items-center
+justify-center
+
+transition
+shadow-sm
+"
 
                             >
 
@@ -770,7 +1626,7 @@ function Chat() {
 
                         </div>
 
-                        {/* Attachment */}
+                        {/* Image */}
 
                         <button
 
@@ -784,13 +1640,81 @@ function Chat() {
 
                             className="hidden sm:flex w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 items-center justify-center transition shadow-sm"
 
+                            title="Send Image"
+
                         >
 
-                            <FaPaperclip className="text-pink-600 text-xl" />
+                            🖼️
 
                         </button>
 
-                        {/* Message Input */}
+                        {/* File */}
+
+                        <button
+
+                            type="button"
+
+                            onClick={() =>
+
+                                fileUploadRef.current.click()
+
+                            }
+
+                            className="hidden sm:flex w-11 h-11 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-200 items-center justify-center transition shadow-sm"
+
+                            title="Send File"
+
+                        >
+
+                            <FaPaperclip className="text-blue-600 text-xl" />
+
+                        </button>
+
+                        {/* Voice */}
+
+                        <button
+
+                            type="button"
+
+                            onClick={
+
+                                recording
+
+                                    ? stopRecording
+
+                                    : startRecording
+
+                            }
+
+                            className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-sm ${
+
+                                recording
+
+                                    ? "bg-red-500 text-white animate-pulse"
+
+                                    : "bg-pink-100 hover:bg-pink-200 border border-pink-200"
+
+                            }`}
+
+                        >
+
+                            {
+
+                                recording
+
+                                    ?
+
+                                    <FaStop />
+
+                                    :
+
+                                    <FaMicrophone className="text-pink-600" />
+
+                            }
+
+                        </button>
+
+                        {/* Message */}
 
                         <input
 
@@ -824,8 +1748,32 @@ function Chat() {
 
                             }}
 
-                            className="flex-1 bg-pink-50 border border-pink-200 rounded-full px-6 py-3 outline-none focus:ring-2 focus:ring-pink-500 transition"
+                            className="
+flex-1
 
+bg-pink-50
+
+border
+border-pink-200
+
+rounded-full
+
+px-4
+sm:px-6
+
+py-2.5
+sm:py-3
+
+text-sm
+sm:text-base
+
+outline-none
+
+focus:ring-2
+focus:ring-pink-500
+
+transition
+"
                         />
 
                         {/* Send */}
@@ -838,17 +1786,39 @@ function Chat() {
 
                                 !text.trim() &&
 
-                                !selectedImage
+                                !selectedImage &&
+
+                                !voiceBlob &&
+
+                                !selectedFile
 
                             }
 
-                            className={`rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg
+                            className={`
+rounded-full
 
-                            ${
+w-10
+h-10
+
+sm:w-12
+sm:h-12
+
+flex
+items-center
+justify-center
+
+transition-all
+duration-300
+
+shadow-lg ${
 
                                 text.trim() ||
 
-                                selectedImage
+                                selectedImage ||
+
+                                voiceBlob ||
+
+                                selectedFile
 
                                     ?
 
@@ -872,7 +1842,71 @@ function Chat() {
 
             </div>
 
-            {/* ================= Fullscreen Image ================= */}
+            {/* ================= REACTION PICKER ================= */}
+
+            {
+
+                reactionPicker.visible && (
+
+                    <div
+
+                        className="fixed z-[9999] bg-white rounded-full shadow-2xl px-3 py-2 flex gap-2 border"
+
+                       style={{
+
+    left: reactionPicker.x,
+
+    top: reactionPicker.y - 65
+
+}}
+
+                        onClick={(e) =>
+
+                            e.stopPropagation()
+
+                        }
+
+                    >
+
+                        {
+
+                            reactionEmojis.map((emoji) => (
+
+                                <button
+
+                                    key={emoji}
+
+                                    onClick={() =>
+
+                                        handleReaction(emoji)
+
+                                    }
+
+                                    className="
+text-xl
+sm:text-2xl
+
+hover:scale-125
+transition
+"
+
+                                >
+
+                                    {emoji}
+
+                                </button>
+
+                            ))
+
+                        }
+
+                    </div>
+
+                )
+
+            }
+
+            {/* ================= FULL SCREEN IMAGE ================= */}
 
             {
 
@@ -880,7 +1914,21 @@ function Chat() {
 
                     <div
 
-                        className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-6"
+                       className="
+fixed
+inset-0
+
+bg-black/90
+
+z-[9999]
+
+flex
+items-center
+justify-center
+
+p-3
+sm:p-6
+"
 
                         onClick={() =>
 
@@ -892,7 +1940,24 @@ function Chat() {
 
                         <button
 
-                            className="absolute top-6 right-6 text-white text-3xl hover:text-pink-400 transition"
+                           className="
+absolute
+
+top-3
+right-3
+
+sm:top-6
+sm:right-6
+
+text-white
+
+text-2xl
+sm:text-3xl
+
+hover:text-pink-400
+
+transition
+"
 
                         >
 
@@ -906,7 +1971,15 @@ function Chat() {
 
                             alt="Full Size"
 
-                            className="max-w-full max-h-full rounded-xl shadow-2xl"
+                            className="
+max-w-full
+max-h-full
+
+rounded-lg
+sm:rounded-xl
+
+shadow-2xl
+"
 
                         />
 

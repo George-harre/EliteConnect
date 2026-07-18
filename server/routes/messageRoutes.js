@@ -3,10 +3,27 @@ const router = express.Router();
 
 const protect = require("../middleware/authMiddleware");
 
-const upload = require("../middleware/chatUploadMiddleware");
+// ===================================
+// Upload Middlewares
+// ===================================
+
+const uploadImage = require("../middleware/chatUploadMiddleware");
+const uploadVoice = require("../middleware/voiceUpload");
+const uploadFile = require("../middleware/fileUpload");
+
+// ===================================
+// Controllers
+// ===================================
+
 const {
 
     sendMessage,
+
+    sendVoiceMessage,
+
+    sendFileMessage,
+
+    reactToMessage,
 
     getConversation,
 
@@ -17,6 +34,7 @@ const {
 // ===================================
 // Get all conversations
 // ===================================
+
 router.get(
 
     "/",
@@ -27,9 +45,11 @@ router.get(
 
 );
 
+
 // ===================================
 // Get conversation with one user
 // ===================================
+
 router.get(
 
     "/:userId",
@@ -41,17 +61,76 @@ router.get(
 );
 
 // ===================================
-// Send Message (Text / Image)
+// Send Text / Image Message
 // ===================================
+
 router.post(
 
     "/",
 
     protect,
 
-    upload.single("image"),
+    uploadImage.single("image"),
 
     sendMessage
+
+);
+
+// ===================================
+// Send Voice Message
+// ===================================
+
+router.post(
+
+    "/voice",
+
+    protect,
+
+    uploadVoice.single("voice"),
+
+    sendVoiceMessage
+
+);
+
+// ===================================
+// React to Message
+// ===================================
+
+router.post(
+
+    "/:messageId/react",
+
+    protect,
+
+    reactToMessage
+
+);
+// ===================================
+// Send File
+// ===================================
+
+router.post(
+
+    "/file",
+
+    protect,
+
+    uploadFile.single("file"),
+
+    sendFileMessage
+
+);
+// ===================================
+// React To Message
+// ===================================
+
+router.put(
+
+    "/:id/react",
+
+    protect,
+
+    reactToMessage
 
 );
 

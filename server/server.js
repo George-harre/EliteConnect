@@ -35,14 +35,18 @@ const io = new Server(server, {
     }
 });
 
-// Make Socket.IO available everywhere
+// Make Socket.IO available globally
 app.set("io", io);
 
 // ===============================
-// Connected Users
+// Online Users
 // ===============================
 const onlineUsers = new Set();
+const socketToUser = new Map();
 
+// ===============================
+// Socket Connection
+// ===============================
 io.on("connection", (socket) => {
 
     console.log(`🟢 Connected: ${socket.id}`);
@@ -53,6 +57,10 @@ io.on("connection", (socket) => {
     socket.on("join", (userId) => {
 
         socket.join(userId);
+
+        socket.userId = userId;
+
+        socketToUser.set(socket.id, userId);
 
         onlineUsers.add(userId);
 
@@ -84,11 +92,88 @@ io.on("connection", (socket) => {
     });
 
     // ===============================
+    // New Message
+    // ===============================
+    socket.on("sendMessage", (message) => {
+
+        if (message.receiver?._id) {
+
+            io.to(message.receiver._id.toString())
+
+                .emit("receiveMessage", message);
+
+        }
+
+        else if (message.receiver) {
+
+            io.to(message.receiver.toString())
+
+                .emit("receiveMessage", message);
+
+        }
+
+    });
+
+    // ===============================
+    // Message Reaction
+    // ===============================
+    socket.on("messageReaction", (message) => {
+
+        if (message.sender?._id) {
+
+            io.to(message.sender._id.toString())
+
+                .emit("messageReaction", message);
+
+        }
+
+        if (message.receiver?._id) {
+
+            io.to(message.receiver._id.toString())
+
+                .emit("messageReaction", message);
+
+        }
+
+    });
+
+    // ===============================
+    // Read Receipts
+    // ===============================
+    socket.on("messagesRead", (data) => {
+
+        io.to(data.sender)
+
+            .emit("messagesRead", data);
+
+    });
+
+    // ===============================
     // Disconnect
     // ===============================
     socket.on("disconnect", () => {
 
         console.log(`🔴 Disconnected: ${socket.id}`);
+
+        const userId = socketToUser.get(socket.id);
+
+        if (userId) {
+
+            onlineUsers.delete(userId);
+
+            socketToUser.delete(socket.id);
+
+            io.emit(
+
+                "onlineUsers",
+
+                Array.from(onlineUsers)
+
+            );
+
+            console.log(`User ${userId} went offline`);
+
+        }
 
     });
 
@@ -128,6 +213,7 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/messages", messageRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
 app.use("/api/profile", profileRoutes);
 
 // ===============================

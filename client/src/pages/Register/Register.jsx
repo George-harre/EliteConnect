@@ -42,19 +42,24 @@ function Register() {
 
             const data = await registerUser(form);
 
-            setMessage(data.message || "Account created successfully!");
+           setMessage(
+    "🎉 Account created successfully!\n\n" +
+    "A verification email has been sent to your email address.\n\n" +
+    "📧 Please check your Inbox first.\n" +
+    "If you don't see it, check your Spam/Junk folder before logging in."
+);
 
-            setForm({
-                firstName: "",
-                lastName: "",
-                email: "",
-                password: ""
-            });
+setForm({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: ""
+});
 
-            setTimeout(() => {
-                navigate("/login");
-            }, 1500);
-
+// Give the user enough time to read
+setTimeout(() => {
+    navigate("/login");
+}, 1500);
         } catch (error) {
 
             setMessage(

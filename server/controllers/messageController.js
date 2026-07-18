@@ -4,7 +4,7 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 
 // ===================================
-// Send Message
+// Send Text / Image Message
 // ===================================
 const sendMessage = async (req, res) => {
 
@@ -18,23 +18,20 @@ const sendMessage = async (req, res) => {
             ? `/uploads/chat/${req.file.filename}`
             : "";
 
-        // ===============================
-        // Require either text or image
-        // ===============================
         if (
             (!message || message.trim() === "") &&
             !image
         ) {
 
             return res.status(400).json({
+
                 message: "Message cannot be empty."
+
             });
 
         }
 
-        // ===============================
         // Ensure users are matched
-        // ===============================
         const match = await Match.findOne({
 
             users: {
@@ -53,9 +50,7 @@ const sendMessage = async (req, res) => {
 
         }
 
-        // ===============================
-        // Determine Message Type
-        // ===============================
+        // Determine message type
         let messageType = "text";
 
         if (message && image) {
@@ -70,9 +65,6 @@ const sendMessage = async (req, res) => {
 
         }
 
-        // ===============================
-        // Save Message
-        // ===============================
         const newMessage = await Message.create({
 
             sender,
@@ -97,9 +89,6 @@ const sendMessage = async (req, res) => {
             "firstName lastName profilePhoto"
         );
 
-        // ===============================
-        // Notification
-        // ===============================
         const notification = await Notification.create({
 
             recipient: receiver,
@@ -120,9 +109,6 @@ const sendMessage = async (req, res) => {
             "firstName lastName profilePhoto"
         );
 
-        // ===============================
-        // Socket.IO
-        // ===============================
         const io = req.app.get("io");
 
         io.to(receiver.toString()).emit(
@@ -140,6 +126,407 @@ const sendMessage = async (req, res) => {
             message: "Message sent successfully.",
 
             newMessage
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            message: error.message
+
+        });
+
+    }
+
+};
+
+// ===================================
+// Send Voice Message
+// ===================================
+const sendVoiceMessage = async (req, res) => {
+
+    try {
+
+        const sender = req.user._id;
+
+        const { receiver } = req.body;
+
+        if (!req.file) {
+
+            return res.status(400).json({
+
+                message: "Voice note is required."
+
+            });
+
+        }
+
+        const match = await Match.findOne({
+
+            users: {
+                $all: [sender, receiver]
+            }
+
+        });
+
+        if (!match) {
+
+            return res.status(403).json({
+
+                message: "You can only message your matches."
+
+            });
+
+        }
+
+        const newMessage = await Message.create({
+
+            sender,
+
+            receiver,
+
+            voice: `/uploads/voice/${req.file.filename}`,
+
+            messageType: "voice"
+
+        });
+
+        await newMessage.populate(
+            "sender",
+            "firstName lastName profilePhoto"
+        );
+
+        await newMessage.populate(
+            "receiver",
+            "firstName lastName profilePhoto"
+        );
+
+        const notification = await Notification.create({
+
+            recipient: receiver,
+
+            sender,
+
+            type: "message",
+
+            text: "sent you a voice note 🎙️"
+
+        });
+
+        await notification.populate(
+            "sender",
+            "firstName lastName profilePhoto"
+        );
+
+        const io = req.app.get("io");
+
+        io.to(receiver.toString()).emit(
+            "receiveMessage",
+            newMessage
+        );
+
+        io.to(receiver.toString()).emit(
+            "newNotification",
+            notification
+        );
+
+        res.status(201).json({
+
+            message: "Voice note sent successfully.",
+
+            newMessage
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            message: error.message
+
+        });
+
+    }
+
+};
+
+// ===================================
+// Send File Message
+// ===================================
+
+const sendFileMessage = async (req, res) => {
+
+    try {
+
+        const sender = req.user._id;
+
+        const { receiver } = req.body;
+
+        if (!req.file) {
+
+            return res.status(400).json({
+
+                message: "No file uploaded."
+
+            });
+
+        }
+
+        // ===================================
+        // Ensure users are matched
+        // ===================================
+
+        const match = await Match.findOne({
+
+            users: {
+                $all: [sender, receiver]
+            }
+
+        });
+
+        if (!match) {
+
+            return res.status(403).json({
+
+                message: "You can only message your matches."
+
+            });
+
+        }
+
+        // ===================================
+        // Save Message
+        // ===================================
+
+        const newMessage = await Message.create({
+
+            sender,
+
+            receiver,
+
+            file: `/uploads/files/${req.file.filename}`,
+
+            fileName: req.file.originalname,
+
+            messageType: "file"
+
+        });
+
+        await newMessage.populate(
+
+            "sender",
+
+            "firstName lastName profilePhoto"
+
+        );
+
+        await newMessage.populate(
+
+            "receiver",
+
+            "firstName lastName profilePhoto"
+
+        );
+
+        // ===================================
+        // Notification
+        // ===================================
+
+        const notification = await Notification.create({
+
+            recipient: receiver,
+
+            sender,
+
+            type: "message",
+
+            text: `sent you a file 📎`
+
+        });
+
+        await notification.populate(
+
+            "sender",
+
+            "firstName lastName profilePhoto"
+
+        );
+
+        // ===================================
+        // Socket.IO
+        // ===================================
+
+        const io = req.app.get("io");
+
+        io.to(receiver.toString()).emit(
+
+            "receiveMessage",
+
+            newMessage
+
+        );
+
+        io.to(receiver.toString()).emit(
+
+            "newNotification",
+
+            notification
+
+        );
+
+        res.status(201).json({
+
+            message: "File sent successfully.",
+
+            newMessage
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            message: error.message
+
+        });
+
+    }
+
+};
+
+// ===================================
+// React to Message
+// ===================================
+const reactToMessage = async (req, res) => {
+
+    try {
+
+        const userId = req.user._id;
+
+        const { messageId } = req.params;
+
+        const { emoji } = req.body;
+
+        if (!emoji) {
+
+            return res.status(400).json({
+
+                message: "Emoji is required."
+
+            });
+
+        }
+
+        const message = await Message.findById(messageId);
+
+        if (!message) {
+
+            return res.status(404).json({
+
+                message: "Message not found."
+
+            });
+
+        }
+
+        // ===============================
+        // Existing reaction?
+        // ===============================
+
+        const existingReaction = message.reactions.find(
+
+            reaction =>
+
+                reaction.user.toString() ===
+
+                userId.toString()
+
+        );
+
+        if (existingReaction) {
+
+            // Same emoji = remove reaction
+
+            if (existingReaction.emoji === emoji) {
+
+                message.reactions = message.reactions.filter(
+
+                    reaction =>
+
+                        reaction.user.toString() !==
+
+                        userId.toString()
+
+                );
+
+            }
+
+            // Different emoji = update
+
+            else {
+
+                existingReaction.emoji = emoji;
+
+            }
+
+        }
+
+        else {
+
+            message.reactions.push({
+
+                user: userId,
+
+                emoji
+
+            });
+
+        }
+
+        await message.save();
+
+        await message.populate(
+
+            "reactions.user",
+
+            "firstName lastName profilePhoto"
+
+        );
+
+        // ===============================
+        // Socket.IO
+        // ===============================
+
+        const io = req.app.get("io");
+
+        io.to(message.sender.toString()).emit(
+
+            "messageReaction",
+
+            message
+
+        );
+
+        io.to(message.receiver.toString()).emit(
+
+            "messageReaction",
+
+            message
+
+        );
+
+        res.status(200).json({
+
+            message: "Reaction updated.",
+
+            updatedMessage: message
 
         });
 
@@ -366,15 +753,42 @@ const getConversations = async (req, res) => {
 
                 });
 
+                let preview = "Start chatting...";
+
+                if (lastMessage) {
+
+                    switch (lastMessage.messageType) {
+
+                        case "image":
+                            preview = "📷 Photo";
+                            break;
+
+                        case "voice":
+                            preview = "🎙️ Voice note";
+                            break;
+
+                        case "file":
+                            preview = "📎 File";
+                            break;
+
+                        case "text-image":
+                            preview = "📷 Photo + Message";
+                            break;
+
+                        default:
+                            preview = lastMessage.message;
+
+                    }
+
+                }
+
                 return {
 
                     matchId: match._id,
 
                     user: otherUser,
 
-                    lastMessage: lastMessage
-                        ? lastMessage.message
-                        : "Start chatting...",
+                    lastMessage: preview,
 
                     lastMessageTime: lastMessage
                         ? lastMessage.createdAt
@@ -422,9 +836,17 @@ const getConversations = async (req, res) => {
 
 };
 
+
+
 module.exports = {
 
     sendMessage,
+
+    sendVoiceMessage,
+
+    sendFileMessage,
+
+    reactToMessage,
 
     getConversation,
 
