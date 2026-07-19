@@ -1162,11 +1162,13 @@ const showDate = currentDate !== previousDate;
 
     openReactionPicker(
 
-        e,
+    e,
 
-        msg._id
+    msg._id,
 
-    );
+    mine
+
+)
 
 }}
     className={`
