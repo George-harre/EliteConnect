@@ -2136,13 +2136,20 @@ onClick={() => {
 }}
 
 className="
-w-full
-text-left
-px-4
-py-3
-hover:bg-red-50
+px-2
+py-1
+
+text-xs
+
 text-red-600
-font-medium
+
+rounded-lg
+
+hover:bg-red-50
+
+transition
+
+whitespace-nowrap
 "
 
 >
