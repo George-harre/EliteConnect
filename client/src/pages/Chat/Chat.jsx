@@ -793,12 +793,10 @@ function Chat() {
         h-screen
         lg:h-[calc(100vh-70px)]
 
-        max-w-screen-2xl
-        mx-auto
+        lg:max-w-screen-2xl
+        lg:mx-auto
 
-        px-0
-        sm:px-3
-        lg:px-6
+        p-0
     "
     onClick={closeReactionPicker}
 >
@@ -962,8 +960,8 @@ border-white
         via-white
         to-pink-50
 
-        px-3
-        sm:px-5
+        px-1
+        sm:px-4
         lg:px-8
 
         py-4
@@ -1632,8 +1630,8 @@ gap-3
                                 }
 
                                 className="
-w-9 h-9
-sm:w-10 sm:h-10
+w-12 h-12
+sm:w-11 sm:h-11
 rounded-full
 bg-pink-100
 hover:bg-pink-200
@@ -1647,7 +1645,7 @@ flex-shrink-0
 
                             >
 
-                                <FaSmile className="text-pink-600 text-xl" />
+                                <FaSmile className="text-pink-600 text-[26px]" />
 
                             </button>
 
@@ -1697,8 +1695,8 @@ flex-shrink-0
 
                             className="
 flex
-w-9 h-9
-sm:w-10 sm:h-10
+w-12 h-12
+sm:w-11 sm:h-11
 
 rounded-full
 
@@ -1743,7 +1741,7 @@ flex-shrink-0
 
                             }
 
-                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition shadow-sm flex-shrink-0 ${
+                            className={`w-12 h-12 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-sm flex-shrink-0 ${
     recording
         ? "bg-red-500 text-white animate-pulse"
         : "bg-pink-100 hover:bg-pink-200 border border-pink-200"
@@ -1761,7 +1759,7 @@ flex-shrink-0
 
                                     :
 
-                                    <FaMicrophone className="text-pink-600" />
+                                    <FaMicrophone className="text-pink-600 text-[26px]" />
 
                             }
 
