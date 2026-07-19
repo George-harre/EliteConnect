@@ -2072,7 +2072,7 @@ onClick={(e)=>e.stopPropagation()}
 
 >
 
-<div className="flex gap-2 px-3 pb-2">
+<div className="flex gap-1 px-3 pb-2">
 
 {
 
@@ -2129,35 +2129,41 @@ reactionPicker.mine && (
 
 <button
 
-onClick={() => {
+    onClick={() =>
 
-    setShowDeleteDialog(true);
+        setShowDeleteDialog(true)
 
-}}
+    }
 
-className="
-px-2
-py-1
+    className="
 
-text-xs
+        w-8
+        h-8
 
-text-red-600
+        rounded-full
 
-rounded-lg
+        flex
+        items-center
+        justify-center
 
-hover:bg-red-50
+        text-base
 
-transition
+        text-red-500
 
-whitespace-nowrap
-"
+        hover:bg-red-50
+        hover:scale-110
+
+        transition
+
+    "
+
+    title="Delete"
 
 >
 
-🗑 Delete Message
+    🗑️
 
 </button>
-
 </>
 
 )
