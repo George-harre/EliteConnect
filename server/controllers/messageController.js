@@ -836,7 +836,105 @@ const getConversations = async (req, res) => {
 
 };
 
+// ===============================
+// Delete Message (Delete for Everyone)
+// ===============================
 
+const deleteMessage = async (req, res) => {
+
+    try {
+
+        const { messageId } = req.params;
+
+        const userId = req.user._id;
+
+        const message = await Message.findById(messageId);
+
+        if (!message) {
+
+            return res.status(404).json({
+
+                message: "Message not found."
+
+            });
+
+        }
+
+        // Only sender can delete
+
+        if (message.sender.toString() !== userId.toString()) {
+
+            return res.status(403).json({
+
+                message: "You can only delete your own messages."
+
+            });
+
+        }
+
+        message.deleted = true;
+        message.deletedBy = userId;
+        message.deletedAt = new Date();
+
+        await message.save();
+
+        // Notify both users in realtime
+
+        const io = req.app.get("io");
+
+        if (io) {
+
+            io.to(message.sender.toString()).emit(
+
+                "messageDeleted",
+
+                {
+
+                    messageId: message._id,
+
+                    deletedBy: userId
+
+                }
+
+            );
+
+            io.to(message.receiver.toString()).emit(
+
+                "messageDeleted",
+
+                {
+
+                    messageId: message._id,
+
+                    deletedBy: userId
+
+                }
+
+            );
+
+        }
+
+        res.status(200).json({
+
+            message: "Message deleted successfully.",
+
+            deletedMessage: message
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            message: error.message
+
+        });
+
+    }
+
+};
 
 module.exports = {
 
@@ -849,6 +947,8 @@ module.exports = {
     reactToMessage,
 
     getConversation,
+
+    deleteMessage,
 
     getConversations
 

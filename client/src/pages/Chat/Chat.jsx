@@ -17,11 +17,19 @@ import {
 import socket from "../../socket";
 
 import {
+
     getConversation,
+
     sendMessage,
+
     sendVoiceMessage,
+
     sendFileMessage,
-    reactToMessage
+
+    reactToMessage,
+
+    deleteMessage
+
 } from "../../services/messageService";
 
 import { getImageUrl } from "../../utils/imageUrl";
@@ -94,12 +102,24 @@ function Chat() {
     // ==========================
 
     const [reactionPicker, setReactionPicker] =
-        useState({
-            visible: false,
-            x: 0,
-            y: 0,
-            messageId: null
-        });
+    useState({
+
+        visible: false,
+
+        x: 0,
+
+        y: 0,
+
+        side: "left",
+
+        messageId: null,
+
+        mine: false
+
+    });
+
+const [showDeleteDialog, setShowDeleteDialog] =
+    useState(false);
 
     const reactionEmojis = [
         "❤️",
@@ -407,48 +427,56 @@ function Chat() {
 
     const openReactionPicker = (
 
-        event,
+    event,
 
-        messageId
+    messageId,
 
-    ) => {
+    mine
 
-        event.preventDefault();
+) => {
 
-        setReactionPicker({
+    event.preventDefault();
 
-            visible: true,
+    setReactionPicker({
 
-            x: event.clientX,
+        visible: true,
 
-            y: event.clientY - 60,
+        x: event.clientX,
 
-            messageId
+        y: event.clientY,
 
-        });
+        side: mine ? "right" : "left",
 
-    };
+        messageId,
 
+        mine
+
+    });
+
+};
     // ==========================
     // CLOSE REACTION PICKER
     // ==========================
 
     const closeReactionPicker = () => {
 
-        setReactionPicker({
+    setReactionPicker({
 
-            visible: false,
+        visible: false,
 
-            x: 0,
+        x: 0,
 
-            y: 0,
+        y: 0,
 
-            messageId: null
+        side: "left",
 
-        });
+        messageId: null,
 
-    };
+        mine: false
 
+    });
+
+};
     // ==========================
     // SEND REACTION
     // ==========================
@@ -498,6 +526,60 @@ function Chat() {
         closeReactionPicker();
 
     };
+
+    // ==========================
+// DELETE MESSAGE
+// ==========================
+
+const handleDeleteMessage = async () => {
+
+    try {
+
+        await deleteMessage(
+
+            reactionPicker.messageId
+
+        );
+
+        setMessages(previous =>
+
+            previous.map(message =>
+
+                message._id === reactionPicker.messageId
+
+                    ? {
+
+                        ...message,
+
+                        deleted: true,
+
+                        deletedBy: currentUser.id
+
+                    }
+
+                    : message
+
+            )
+
+        );
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+    finally {
+
+        setShowDeleteDialog(false);
+
+        closeReactionPicker();
+
+    }
+
+};
         // ==========================
     // IMAGE
     // ==========================
@@ -1054,8 +1136,18 @@ const showDate = currentDate !== previousDate;
     key={msg._id}
 
     onContextMenu={(e) =>
-        openReactionPicker(e, msg._id)
-    }
+
+    openReactionPicker(
+
+        e,
+
+        msg._id,
+
+        mine
+
+    )
+
+}
 
     className={`
 
@@ -1220,29 +1312,41 @@ sm:text-base
                                                 {/* TEXT */}
 
                                                 {
+    msg.deleted
 
-                                                    msg.message && (
+        ? (
 
-                                                        <p
-    className="
-        leading-7
+            <p className="italic text-gray-400">
 
-        break-words
+                {
 
-        whitespace-pre-wrap
+                    msg.deletedBy?.toString() === currentUser.id
 
-        text-[15px]
-        sm:text-[16px]
-    "
->
+                        ? "🗑️ You deleted this message"
 
-                                                            {msg.message}
+                        : "🗑️ This message was deleted"
 
-                                                        </p>
+                }
 
-                                                    )
+            </p>
 
-                                                }
+        )
+
+        : (
+
+            msg.message && (
+
+                <p className="leading-relaxed break-words text-[15px] sm:text-base">
+
+                    {msg.message}
+
+                </p>
+
+            )
+
+        )
+
+}
                                                                                                 {/* REACTIONS */}
 
                                                 {
@@ -1594,7 +1698,9 @@ gap-3
         flex
         items-center
 
-        gap-2
+        w-full
+
+        gap-1
 
         bg-gray-50
 
@@ -1613,8 +1719,7 @@ gap-3
 >
                         {/* Emoji */}
 
-                        <div className="relative ">
-
+                        <div className="relative flex-shrink-0">
                             <button
 
                                 type="button"
@@ -1630,22 +1735,17 @@ gap-3
                                 }
 
                                 className="
-w-12 h-12
-sm:w-11 sm:h-11
+w-10 h-10
 rounded-full
 bg-pink-100
 hover:bg-pink-200
 border border-pink-200
 flex items-center justify-center
 transition
-shadow-sm
-hover:scale-105
-flex-shrink-0
-"
 
-                            >
+">
 
-                                <FaSmile className="text-pink-600 text-[26px]" />
+                                <FaSmile className="text-pink-600 text-xl" />
 
                             </button>
 
@@ -1694,26 +1794,26 @@ flex-shrink-0
                             }
 
                             className="
-flex
-w-12 h-12
-sm:w-11 sm:h-11
+                w-10
+                h-10
 
-rounded-full
+                rounded-full
 
-bg-pink-100
-hover:bg-pink-200
+                bg-pink-100
+                hover:bg-pink-200
 
-border
-border-pink-200
+                border
+                border-pink-200
 
-items-center
-justify-center
+                flex
+                items-center
+                justify-center
 
-transition
-shadow-sm
-hover:scale-105
-flex-shrink-0
-"
+                transition
+
+                flex-shrink-0
+            "
+
 
                             title="Send Image"
 
@@ -1725,45 +1825,6 @@ flex-shrink-0
 
                     
 
-                        {/* Voice */}
-
-                        <button
-
-                            type="button"
-
-                            onClick={
-
-                                recording
-
-                                    ? stopRecording
-
-                                    : startRecording
-
-                            }
-
-                            className={`w-12 h-12 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-sm flex-shrink-0 ${
-    recording
-        ? "bg-red-500 text-white animate-pulse"
-        : "bg-pink-100 hover:bg-pink-200 border border-pink-200"
-}`}
-
-                        >
-
-                            {
-
-                                recording
-
-                                    ?
-
-                                    <FaStop />
-
-                                    :
-
-                                    <FaMicrophone className="text-pink-600 text-[26px]" />
-
-                            }
-
-                        </button>
 
                         {/* Message */}
 
@@ -1787,76 +1848,134 @@ flex-shrink-0
     }}
 
     className="
-        flex-1
+                flex-1
 
-        min-w-0
+                w-full
 
-        px-5
-        py-3
+                min-w-0
 
-        text-base
+                px-5
+                py-3
 
-        rounded-full
+                text-base
 
-        border-2
-        border-pink-300
+                rounded-full
 
-        focus:outline-none
-        focus:border-pink-500
+                border-2
+                border-pink-300
 
-        bg-white
-    "
+                bg-white
+
+                focus:outline-none
+                focus:border-pink-500
+            "
+
 />
 
-                        {/* Send */}
+                        {/* Send / Voice */}
 
-                        <button
+{
 
-                            onClick={handleSend}
-
-                            disabled={
-
-                                !text.trim() &&
-
-                                !selectedImage &&
-
-                                !voiceBlob &&
-
-                                !selectedFile
-
-                            }
-
-                           className={`
-w-11
-h-11
-
-rounded-full
-
-flex
-items-center
-justify-center
-
-transition-all
-duration-300
-
-shadow-md
-
-${
     text.trim() ||
+
     selectedImage ||
-    voiceBlob ||
-    selectedFile
-        ? "bg-pink-600 hover:bg-pink-700 hover:scale-105 text-white"
-        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+
+    selectedFile ||
+
+    voiceBlob ? (
+
+        <button
+
+            onClick={handleSend}
+
+            className="
+                w-11
+                h-11
+
+                rounded-full
+
+                flex
+                items-center
+                justify-center
+
+                bg-pink-600
+                hover:bg-pink-700
+
+                text-white
+
+                transition-all
+                duration-300
+
+                shadow-md
+
+                hover:scale-105
+            "
+
+        >
+
+            <FaPaperPlane className="text-lg" />
+
+        </button>
+
+    ) : (
+
+        <button
+
+            type="button"
+
+            onClick={
+
+                recording
+
+                    ? stopRecording
+
+                    : startRecording
+
+            }
+
+            className={`
+                w-11
+                h-11
+
+                rounded-full
+
+                flex
+                items-center
+                justify-center
+
+                transition-all
+                duration-300
+
+                shadow-md
+
+                ${
+                    recording
+                        ? "bg-red-500 text-white animate-pulse"
+                        : "bg-pink-600 hover:bg-pink-700 text-white"
+                }
+            `}
+
+        >
+
+            {
+
+                recording
+
+                    ?
+
+                    <FaStop className="text-lg" />
+
+                    :
+
+                    <FaMicrophone className="text-lg" />
+
+            }
+
+        </button>
+
+    )
+
 }
-`}
-
-                        >
-
-                            <FaPaperPlane />
-
-                        </button>
-
                     </div>
 
                 </div>
@@ -1866,66 +1985,199 @@ ${
             {/* ================= REACTION PICKER ================= */}
 
             {
+reactionPicker.visible && (
 
-                reactionPicker.visible && (
+<div
 
-                    <div
+className="
+fixed
+z-[9999]
+bg-white
+rounded-2xl
+shadow-2xl
+border
+py-2
+"
 
-                        className="fixed z-[9999] bg-white rounded-full shadow-2xl px-3 py-2 flex gap-2 border"
+style={{
 
-                       style={{
+top: reactionPicker.y - 70,
 
-    left: reactionPicker.x,
+left:
 
-    top: reactionPicker.y - 65
+reactionPicker.mine
+
+? "auto"
+
+: reactionPicker.x,
+
+right:
+
+reactionPicker.mine
+
+? window.innerWidth - reactionPicker.x
+
+: "auto"
 
 }}
 
-                        onClick={(e) =>
+onClick={(e)=>e.stopPropagation()}
 
-                            e.stopPropagation()
+>
 
-                        }
+<div className="flex gap-2 px-3 pb-2">
 
-                    >
+{
 
-                        {
+reactionEmojis.map((emoji)=>(
 
-                            reactionEmojis.map((emoji) => (
+<button
 
-                                <button
+key={emoji}
 
-                                    key={emoji}
+onClick={()=>
 
-                                    onClick={() =>
+handleReaction(emoji)
 
-                                        handleReaction(emoji)
+}
 
-                                    }
-
-                                    className="
-text-xl
-sm:text-2xl
-
+className="
+text-2xl
 hover:scale-125
 transition
 "
 
-                                >
+>
 
-                                    {emoji}
+{emoji}
 
-                                </button>
+</button>
 
-                            ))
+))
 
-                        }
+}
 
-                    </div>
+</div>
 
-                )
+{
 
-            }
+reactionPicker.mine && (
+
+<>
+
+<div className="border-t"></div>
+
+<button
+
+onClick={() => {
+
+    setShowDeleteDialog(true);
+
+}}
+
+className="
+w-full
+text-left
+px-4
+py-3
+hover:bg-red-50
+text-red-600
+font-medium
+"
+
+>
+
+🗑 Delete Message
+
+</button>
+
+</>
+
+)
+
+}
+
+</div>
+
+)
+
+}
+
+
+{
+showDeleteDialog && (
+
+<div
+className="fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center"
+>
+
+<div
+className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-sm p-6"
+>
+
+<h2 className="text-xl font-bold mb-3">
+
+Delete Message?
+
+</h2>
+
+<p className="text-gray-600 mb-6">
+
+This message will be deleted for everyone.
+
+</p>
+
+<div className="flex justify-end gap-3">
+
+<button
+
+onClick={()=>
+
+setShowDeleteDialog(false)
+
+}
+
+className="
+px-5
+py-2
+rounded-lg
+border
+hover:bg-gray-100
+"
+
+>
+
+Cancel
+
+</button>
+
+<button
+
+onClick={handleDeleteMessage}
+
+className="
+px-5
+py-2
+rounded-lg
+bg-red-600
+hover:bg-red-700
+text-white
+"
+
+>
+
+Delete
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)
+}
 
             {/* ================= FULL SCREEN IMAGE ================= */}
 

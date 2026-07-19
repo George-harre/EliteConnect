@@ -98,6 +98,23 @@ read: {
     default: false
 },
 
+//New//
+deleted: {
+    type: Boolean,
+    default: false
+},
+
+deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+},
+
+deletedAt: {
+    type: Date,
+    default: null
+},
+
 // ===================================
 // Reactions
 // ===================================

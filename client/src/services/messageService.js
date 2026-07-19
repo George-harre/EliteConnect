@@ -181,3 +181,18 @@ export const reactToMessage = async (
     return response.data;
 
 };
+
+// ==========================================
+// Delete Message
+// ==========================================
+export const deleteMessage = async (messageId) => {
+
+    const response = await api.delete(
+
+        `/messages/${messageId}`
+
+    );
+
+    return response.data;
+
+};

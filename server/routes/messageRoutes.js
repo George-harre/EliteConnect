@@ -27,7 +27,9 @@ const {
 
     getConversation,
 
-    getConversations
+    getConversations,
+
+    deleteMessage
 
 } = require("../controllers/messageController");
 
@@ -44,7 +46,6 @@ router.get(
     getConversations
 
 );
-
 
 // ===================================
 // Get conversation with one user
@@ -93,19 +94,6 @@ router.post(
 );
 
 // ===================================
-// React to Message
-// ===================================
-
-router.post(
-
-    "/:messageId/react",
-
-    protect,
-
-    reactToMessage
-
-);
-// ===================================
 // Send File
 // ===================================
 
@@ -120,6 +108,7 @@ router.post(
     sendFileMessage
 
 );
+
 // ===================================
 // React To Message
 // ===================================
@@ -131,6 +120,20 @@ router.put(
     protect,
 
     reactToMessage
+
+);
+
+// ===================================
+// Delete Message
+// ===================================
+
+router.delete(
+
+    "/:messageId",
+
+    protect,
+
+    deleteMessage
 
 );
 
