@@ -343,6 +343,34 @@ const [showDeleteDialog, setShowDeleteDialog] =
 
         );
 
+        // ======================
+// Message Deleted
+// ======================
+
+socket.on(
+
+    "messageDeleted",
+
+    (updatedMessage) => {
+
+        setMessages(previous =>
+
+            previous.map(message =>
+
+                message._id === updatedMessage._id
+
+                    ? updatedMessage
+
+                    : message
+
+            )
+
+        );
+
+    }
+
+);
+
         return () => {
 
             socket.off("receiveMessage");
@@ -356,6 +384,7 @@ const [showDeleteDialog, setShowDeleteDialog] =
             socket.off("messagesRead");
 
             socket.off("messageReaction");
+            socket.off("messageDeleted");
 
             socket.disconnect();
 
@@ -535,7 +564,7 @@ const handleDeleteMessage = async () => {
 
     try {
 
-        await deleteMessage(
+        const response = await deleteMessage(
 
             reactionPicker.messageId
 
@@ -545,17 +574,9 @@ const handleDeleteMessage = async () => {
 
             previous.map(message =>
 
-                message._id === reactionPicker.messageId
+                message._id === response.deletedMessage._id
 
-                    ? {
-
-                        ...message,
-
-                        deleted: true,
-
-                        deletedBy: currentUser.id
-
-                    }
+                    ? response.deletedMessage
 
                     : message
 
@@ -1135,20 +1156,19 @@ const showDate = currentDate !== previousDate;
 
     key={msg._id}
 
-    onContextMenu={(e) =>
+    onContextMenu={(e) => {
+
+    if (msg.deleted) return;
 
     openReactionPicker(
 
         e,
 
-        msg._id,
+        msg._id
 
-        mine
+    );
 
-    )
-
-}
-
+}}
     className={`
 
         flex
@@ -1166,37 +1186,44 @@ const showDate = currentDate !== previousDate;
 
                                             <div
 
-                                               className={`
-max-w-[92%]
-sm:max-w-[80%]
-lg:max-w-[72%]
-xl:max-w-[65%]
+    className={`
+        max-w-[92%]
+        sm:max-w-[80%]
+        lg:max-w-[72%]
+        xl:max-w-[65%]
 
-rounded-3xl
+        rounded-3xl
 
-px-4
-sm:px-6
+        px-4
+        sm:px-6
 
-py-3.5
+        py-3.5
 
-shadow-md
-transition
-hover:shadow-lg
+        shadow-md
 
-${
-    mine
-        ? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
-        : "bg-white rounded-bl-md"
+        transition-all
+        duration-500
+
+        ${
+            msg.deleted
+                ? "opacity-60 scale-[0.98]"
+                : "opacity-100 scale-100"
+        }
+
+        ${
+    msg.deleted
+        ? "bg-gray-100 text-gray-500 border border-gray-200"
+        : mine
+            ? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
+            : "bg-white rounded-bl-md"
 }
-`}
-
-                                            >
+    `}
+>
 
                                                 {/* IMAGE */}
 
-                                                {
-
-                                                    msg.image && (
+                                               {
+    !msg.deleted && msg.image && (
 
                                                         <img
     src={getImageUrl(msg.image)}
@@ -1238,8 +1265,7 @@ ${
                                                 {/* VOICE */}
 
                                                 {
-
-                                                    msg.voice && (
+    !msg.deleted && msg.voice && (
 
                                                         <audio
 
@@ -1266,8 +1292,7 @@ ${
                                                 {/* FILE */}
 
                                                 {
-
-                                                    msg.file && (
+    !msg.deleted && msg.file && (
 
                                                         <a
 
@@ -1316,19 +1341,29 @@ sm:text-base
 
         ? (
 
-            <p className="italic text-gray-400">
+            <p
+className="
+italic
+text-gray-500
+tracking-wide
+flex
+items-center
+gap-2
+"
+>
 
-                {
+                <>
+    <span className="text-lg">🗑️</span>
 
-                    msg.deletedBy?.toString() === currentUser.id
-
-                        ? "🗑️ You deleted this message"
-
-                        : "🗑️ This message was deleted"
-
-                }
-
-            </p>
+    <span>
+        {
+            msg.deletedBy?.toString() === currentUser.id
+                ? "You deleted this message"
+                : "This message was deleted"
+        }
+    </span>
+</>
+</p>
 
         )
 
@@ -1350,10 +1385,9 @@ sm:text-base
                                                                                                 {/* REACTIONS */}
 
                                                 {
-
-                                                    msg.reactions &&
-
-                                                    msg.reactions.length > 0 && (
+    !msg.deleted &&
+    msg.reactions &&
+    msg.reactions.length > 0 && (
 
                                                         <div className="flex gap-1 mt-2 flex-wrap">
 
