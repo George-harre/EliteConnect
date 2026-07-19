@@ -39,6 +39,15 @@ function Dashboard() {
     });
 
     const [loading, setLoading] = useState(true);
+    if (!user && !loading) {
+    return (
+        <div className="flex justify-center items-center min-h-[60vh]">
+            <div className="text-red-500 text-xl">
+                Failed to load your profile.
+            </div>
+        </div>
+    );
+}
 
     const loadProfile = async () => {
 

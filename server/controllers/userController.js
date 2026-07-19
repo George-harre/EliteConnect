@@ -5,9 +5,6 @@ const Message = require("../models/Message");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-
-const sendVerificationEmail = require("../utils/sendVerificationEmail");
 
 // ===============================
 // Register User
@@ -20,10 +17,20 @@ const registerUser = async (req, res) => {
             firstName,
             lastName,
             email,
-            password
+            password,
+            isAdult
         } = req.body;
 
-        // Check if user already exists
+        // User must confirm they are 18+
+        if (!isAdult) {
+
+            return res.status(400).json({
+                message: "You must confirm that you are at least 18 years old."
+            });
+
+        }
+
+        // Check if email already exists
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
@@ -37,13 +44,6 @@ const registerUser = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Generate verification token
-        const verificationToken =
-            crypto.randomBytes(32).toString("hex");
-
-        const verificationTokenExpires =
-            new Date(Date.now() + 24 * 60 * 60 * 1000);
-
         // Create user
         const user = await User.create({
 
@@ -52,86 +52,32 @@ const registerUser = async (req, res) => {
             email,
             password: hashedPassword,
 
-            verified: false,
-
-            verificationToken,
-            verificationTokenExpires
+            // Temporary during testing
+            verified: true
 
         });
 
-        // Read the user back from MongoDB
-        const savedUser = await User.findById(user._id);
-
-        // ===============================
-        // DEBUG INFORMATION
-        // ===============================
         console.log("====================================");
         console.log("✅ NEW USER CREATED");
-        console.log("Email:", savedUser.email);
-
-        console.log("\nGenerated Token:");
-        console.log(verificationToken);
-
-        console.log("\nStored Token:");
-        console.log(savedUser.verificationToken);
-
-        console.log("\nTokens Match?");
-        console.log(
-            verificationToken === savedUser.verificationToken
-        );
-
-        console.log("\nVerified:");
-        console.log(savedUser.verified);
-
-        console.log("\nExpiry:");
-        console.log(savedUser.verificationTokenExpires);
-
+        console.log("Email:", user.email);
+        console.log("Verified:", user.verified);
         console.log("====================================");
 
-        // Send verification email
-       // Return success immediately
-res.status(201).json({
+        res.status(201).json({
 
-    message:
-        "🎉 Account created successfully! Please check your email (and Spam folder) to verify your account.",
+            message: "🎉 Account created successfully!",
 
-    user: {
+            user: {
 
-        id: savedUser._id,
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                verified: user.verified
 
-        firstName: savedUser.firstName,
+            }
 
-        lastName: savedUser.lastName,
-
-        email: savedUser.email,
-
-        verified: savedUser.verified
-
-    }
-
-});
-
-// Send verification email in the background
-sendVerificationEmail(
-
-    savedUser.email,
-
-    savedUser.firstName,
-
-    savedUser.verificationToken
-
-)
-.then(() => {
-
-    console.log("✅ Verification email sent.");
-
-})
-.catch((error) => {
-
-    console.error("❌ Failed to send verification email:");
-    console.error(error);
-
-});
+        });
 
     }
 
@@ -168,12 +114,7 @@ const loginUser = async (req, res) => {
         console.log("LOGIN REQUEST");
         console.log("Email:", email);
 
-        const user = await User.findOne({
-            email
-        });
-
-        console.log("User from database:");
-        console.log(user);
+        const user = await User.findOne({ email });
 
         if (!user) {
 
@@ -182,8 +123,6 @@ const loginUser = async (req, res) => {
             });
 
         }
-
-        console.log("Verified:", user.verified);
 
         const isMatch = await bcrypt.compare(
             password,
@@ -198,19 +137,8 @@ const loginUser = async (req, res) => {
 
         }
 
-        // =====================================
-        // Prevent login before email verification
-        // =====================================
-        if (!user.verified) {
-
-            console.log("❌ Login blocked because verified = false");
-
-            return res.status(403).json({
-                message:
-                    "Please verify your email before logging in."
-            });
-
-        }
+        // Email verification is temporarily disabled
+        // User can log in immediately after registering
 
         const token = jwt.sign(
 
@@ -239,13 +167,9 @@ const loginUser = async (req, res) => {
             user: {
 
                 id: user._id,
-
                 firstName: user.firstName,
-
                 lastName: user.lastName,
-
                 email: user.email,
-
                 verified: user.verified
 
             }
@@ -270,90 +194,18 @@ const loginUser = async (req, res) => {
 
 // ===============================
 // Verify Email
+// (Temporarily Disabled During Testing)
 // ===============================
 const verifyEmail = async (req, res) => {
 
-    console.log("====================================");
-    console.log("verifyEmail() was called");
+    return res.status(200).json({
 
-    try {
+        message: "Email verification is temporarily disabled during testing."
 
-        const { token } = req.params;
-
-        console.log("Token:");
-        console.log(token);
-
-        const allUsers = await User.find(
-            {},
-            "email verified verificationToken verificationTokenExpires"
-        );
-
-        console.log("Users in database:");
-        console.log(allUsers);
-
-        const user = await User.findOne({
-            verificationToken: token
-        });
-
-        console.log("User found:");
-        console.log(user);
-
-        if (!user) {
-
-            return res.status(404).json({
-                message: "This verification link is invalid."
-            });
-
-        }
-
-        if (user.verified) {
-
-            return res.status(200).json({
-                alreadyVerified: true,
-                message: "Already verified."
-            });
-
-        }
-
-        if (
-            !user.verificationTokenExpires ||
-            user.verificationTokenExpires < new Date()
-        ) {
-
-            return res.status(400).json({
-                message: "Verification link expired."
-            });
-
-        }
-
-        user.verified = true;
-        user.verificationToken = "";
-        user.verificationTokenExpires = null;
-
-        await user.save();
-
-        console.log("✅ User verified successfully");
-        console.log("====================================");
-
-        return res.status(200).json({
-            verified: true,
-            message: "Email verified successfully."
-        });
-
-    }
-
-    catch (error) {
-
-        console.log("VERIFY ERROR:");
-        console.log(error);
-
-        return res.status(500).json({
-            message: error.message
-        });
-
-    }
+    });
 
 };
+
 // ===============================
 // Get Logged-in User Profile
 // ===============================
@@ -391,45 +243,27 @@ const updateProfile = async (req, res) => {
         const {
 
             occupation,
-
             company,
-
             education,
-
             location,
-
             age,
-
             gender,
-
             interestedIn,
-
             relationshipGoal,
-
             bio,
-
             interests
 
         } = req.body;
 
         user.occupation = occupation ?? user.occupation;
-
         user.company = company ?? user.company;
-
         user.education = education ?? user.education;
-
         user.location = location ?? user.location;
-
         user.age = age ?? user.age;
-
         user.gender = gender ?? user.gender;
-
         user.interestedIn = interestedIn ?? user.interestedIn;
-
         user.relationshipGoal = relationshipGoal ?? user.relationshipGoal;
-
         user.bio = bio ?? user.bio;
-
         user.interests = interests ?? user.interests;
 
         const updatedUser = await user.save();
@@ -455,7 +289,6 @@ const updateProfile = async (req, res) => {
     }
 
 };
-
 // ===============================
 // Upload Profile Photo
 // ===============================
@@ -781,21 +614,18 @@ const getDashboardStats = async (req, res) => {
 
         const userId = req.user._id;
 
-        // Likes Received
         const likesReceived = await Like.countDocuments({
 
             receiver: userId
 
         });
 
-        // Matches
         const matches = await Match.countDocuments({
 
             users: userId
 
         });
 
-        // Unread Messages
         const messages = await Message.countDocuments({
 
             receiver: userId,
@@ -804,7 +634,6 @@ const getDashboardStats = async (req, res) => {
 
         });
 
-        // Profile Views (Future Feature)
         const profileViews = 0;
 
         res.status(200).json({
@@ -842,7 +671,7 @@ module.exports = {
 
     loginUser,
 
-    verifyEmail,
+    // verifyEmail removed for testing phase
 
     getProfile,
 

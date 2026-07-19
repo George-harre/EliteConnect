@@ -1,9 +1,10 @@
+
+
 import { Routes, Route } from "react-router-dom";
 
 import Home from "../pages/Home/Home";
 import Register from "../pages/Register/Register";
 import Login from "../pages/Login/Login";
-import VerifyEmail from "../pages/VerifyEmail/VerifyEmail";
 
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Discover from "../pages/Discover/Discover";
@@ -41,11 +42,6 @@ function AppRoutes() {
             <Route
                 path="/login"
                 element={<Login />}
-            />
-
-            <Route
-                path="/verify-email/:token"
-                element={<VerifyEmail />}
             />
 
             {/* ===============================
@@ -99,10 +95,11 @@ function AppRoutes() {
                     path="/edit-profile"
                     element={<EditProfile />}
                 />
+
                 <Route
-    path="/profile/:userId"
-    element={<Profile />}
-/>
+                    path="/profile/:userId"
+                    element={<Profile />}
+                />
 
             </Route>
 

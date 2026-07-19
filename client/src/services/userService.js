@@ -12,7 +12,7 @@ export const getProfile = async () => {
 // Dashboard Statistics
 // ===============================
 export const getDashboardStats = async () => {
-    const response = await api.get("/users/dashboard");
+    const response = await api.get("/users/dashboard/stats");
     return response.data;
 };
 
