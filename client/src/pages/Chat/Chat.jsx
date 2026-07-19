@@ -2028,11 +2028,22 @@ reactionPicker.visible && (
 className="
 fixed
 z-[9999]
+
 bg-white
-rounded-2xl
+
+rounded-full
+
 shadow-2xl
+
+px-2
+py-1
+
+flex
+items-center
+
+gap-1
+
 border
-py-2
 "
 
 style={{
@@ -2078,8 +2089,21 @@ handleReaction(emoji)
 }
 
 className="
-text-2xl
-hover:scale-125
+text-lg
+sm:text-xl
+
+w-8
+h-8
+
+flex
+items-center
+justify-center
+
+rounded-full
+
+hover:bg-pink-50
+hover:scale-110
+
 transition
 "
 
