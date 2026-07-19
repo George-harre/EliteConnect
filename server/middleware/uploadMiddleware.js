@@ -1,39 +1,60 @@
 const multer = require("multer");
-const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// Storage configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "uploads/profiles");
-    },
+const cloudinary = require("../config/cloudinary");
 
-    filename: function (req, file, cb) {
-        const uniqueName =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
+// ===================================
+// Cloudinary Storage
+// ===================================
 
-        cb(
-            null,
-            uniqueName + path.extname(file.originalname)
-        );
+const storage = new CloudinaryStorage({
+
+    cloudinary,
+
+    params: {
+
+        folder: "EliteConnect/ProfilePhotos",
+
+        allowed_formats: [
+
+            "jpg",
+
+            "jpeg",
+
+            "png",
+
+            "webp"
+
+        ],
+
+        transformation: [
+
+            {
+
+                width: 600,
+
+                height: 600,
+
+                crop: "limit",
+
+                quality: "auto"
+
+            }
+
+        ]
+
     }
+
 });
 
-// Accept only image files
-const fileFilter = (req, file, cb) => {
-
-    if (
-        file.mimetype.startsWith("image/")
-    ) {
-        cb(null, true);
-    } else {
-        cb(new Error("Only image files are allowed."), false);
-    }
-
-};
+// ===================================
+// Upload Middleware
+// ===================================
 
 const upload = multer({
-    storage,
-    fileFilter
+
+    storage
+
 });
 
 module.exports = upload;

@@ -266,6 +266,16 @@ const updateProfile = async (req, res) => {
         user.bio = bio ?? user.bio;
         user.interests = interests ?? user.interests;
 
+        // ======================================
+        // Save Profile Photo from Cloudinary
+        // ======================================
+
+        if (req.file) {
+
+            user.profilePhoto = req.file.path;
+
+        }
+
         const updatedUser = await user.save();
 
         res.status(200).json({
@@ -318,7 +328,11 @@ const uploadProfilePhoto = async (req, res) => {
 
         }
 
-        user.profilePhoto = `/uploads/profiles/${req.file.filename}`;
+        // =====================================
+        // Save Cloudinary Image URL
+        // =====================================
+
+        user.profilePhoto = req.file.path;
 
         await user.save();
 
