@@ -1,83 +1,73 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// ===============================
-// Ensure uploads/chat exists
-// ===============================
-const uploadPath = "uploads/chat";
+const cloudinary = require("../config/cloudinary");
 
-if (!fs.existsSync(uploadPath)) {
+// ===================================
+// Cloudinary Storage
+// ===================================
 
-    fs.mkdirSync(uploadPath, { recursive: true });
+const storage = new CloudinaryStorage({
 
-}
+    cloudinary,
 
-// ===============================
-// Storage
-// ===============================
-const storage = multer.diskStorage({
+    params: async (req, file) => {
 
-    destination(req, file, cb) {
+        // Images
+        if (file.mimetype.startsWith("image/")) {
 
-        cb(null, uploadPath);
+            return {
 
-    },
+                folder: "EliteConnect/ChatImages",
 
-    filename(req, file, cb) {
+                resource_type: "image",
 
-        const uniqueName =
+                allowed_formats: [
 
-            Date.now() +
+                    "jpg",
 
-            "-" +
+                    "jpeg",
 
-            Math.round(Math.random() * 1e9);
+                    "png",
 
-        cb(
+                    "webp",
 
-            null,
+                    "gif"
 
-            uniqueName +
+                ]
 
-            path.extname(file.originalname)
+            };
 
-        );
+        }
+
+        // Voice Notes
+        return {
+
+            folder: "EliteConnect/VoiceNotes",
+
+            resource_type: "video"
+
+        };
 
     }
 
 });
 
-// ===============================
+// ===================================
 // Allow Images & Voice Notes
-// ===============================
+// ===================================
+
 const fileFilter = (req, file, cb) => {
 
-    // Images
     if (file.mimetype.startsWith("image/")) {
 
         return cb(null, true);
 
     }
 
-    // Voice Notes
     if (
 
-        file.mimetype === "audio/webm" ||
-
-        file.mimetype === "audio/ogg" ||
-
-        file.mimetype === "audio/mpeg" ||
-
-        file.mimetype === "audio/mp3" ||
-
-        file.mimetype === "audio/wav" ||
-
-        file.mimetype === "audio/x-wav" ||
-
-        file.mimetype === "audio/mp4" ||
-
-        file.mimetype === "audio/m4a"
+        file.mimetype.startsWith("audio/")
 
     ) {
 
@@ -99,9 +89,10 @@ const fileFilter = (req, file, cb) => {
 
 };
 
-// ===============================
+// ===================================
 // Upload
-// ===============================
+// ===================================
+
 module.exports = multer({
 
     storage,
@@ -110,7 +101,7 @@ module.exports = multer({
 
     limits: {
 
-        fileSize: 20 * 1024 * 1024 // 20MB
+        fileSize: 20 * 1024 * 1024
 
     }
 

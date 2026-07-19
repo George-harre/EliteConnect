@@ -15,8 +15,8 @@ const sendMessage = async (req, res) => {
         const { receiver, message } = req.body;
 
         const image = req.file
-            ? `/uploads/chat/${req.file.filename}`
-            : "";
+    ? req.file.path
+    : "";
 
         if (
             (!message || message.trim() === "") &&
@@ -188,7 +188,7 @@ const sendVoiceMessage = async (req, res) => {
 
             receiver,
 
-            voice: `/uploads/voice/${req.file.filename}`,
+            voice: req.file.path,
 
             messageType: "voice"
 
