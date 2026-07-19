@@ -1632,26 +1632,17 @@ gap-3
                                 }
 
                                 className="
-w-10
-h-10
-
-sm:w-11
-sm:h-11
-
+w-9 h-9
+sm:w-10 sm:h-10
 rounded-full
-
 bg-pink-100
 hover:bg-pink-200
-
-border
-border-pink-200
-
-flex
-items-center
-justify-center
-
+border border-pink-200
+flex items-center justify-center
 transition
 shadow-sm
+hover:scale-105
+flex-shrink-0
 "
 
                             >
@@ -1704,7 +1695,27 @@ shadow-sm
 
                             }
 
-                            className="flex w-11 h-11 rounded-full bg-pink-100 hover:bg-pink-200 border border-pink-200 items-center justify-center transition shadow-sm"
+                            className="
+flex
+w-9 h-9
+sm:w-10 sm:h-10
+
+rounded-full
+
+bg-pink-100
+hover:bg-pink-200
+
+border
+border-pink-200
+
+items-center
+justify-center
+
+transition
+shadow-sm
+hover:scale-105
+flex-shrink-0
+"
 
                             title="Send Image"
 
@@ -1714,27 +1725,7 @@ shadow-sm
 
                         </button>
 
-                        {/* File */}
-
-                        <button
-
-                            type="button"
-
-                            onClick={() =>
-
-                                fileUploadRef.current.click()
-
-                            }
-
-                            className="flex w-11 h-11 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-200 items-center justify-center transition shadow-sm"
-
-                            title="Send File"
-
-                        >
-
-                            <FaPaperclip className="text-blue-600 text-xl" />
-
-                        </button>
+                    
 
                         {/* Voice */}
 
@@ -1752,15 +1743,11 @@ shadow-sm
 
                             }
 
-                            className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition shadow-sm ${
-
-                                recording
-
-                                    ? "bg-red-500 text-white animate-pulse"
-
-                                    : "bg-pink-100 hover:bg-pink-200 border border-pink-200"
-
-                            }`}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition shadow-sm flex-shrink-0 ${
+    recording
+        ? "bg-red-500 text-white animate-pulse"
+        : "bg-pink-100 hover:bg-pink-200 border border-pink-200"
+}`}
 
                         >
 
@@ -1783,56 +1770,45 @@ shadow-sm
                         {/* Message */}
 
                         <input
+    type="text"
+    value={text}
+    placeholder="Type a message..."
 
-                            type="text"
+    onChange={(e) =>
+        handleTyping(e.target.value)
+    }
 
-                            value={text}
+    onKeyDown={(e) => {
+        if (
+            e.key === "Enter" &&
+            !e.shiftKey
+        ) {
+            e.preventDefault();
+            handleSend();
+        }
+    }}
 
-                            placeholder="Type your message..."
+    className="
+        flex-1
 
-                            onChange={(e) =>
+        min-w-0
 
-                                handleTyping(e.target.value)
+        px-5
+        py-3
 
-                            }
+        text-base
 
-                            onKeyDown={(e) => {
+        rounded-full
 
-                                if (
+        border-2
+        border-pink-300
 
-                                    e.key === "Enter" &&
+        focus:outline-none
+        focus:border-pink-500
 
-                                    !e.shiftKey
-
-                                ) {
-
-                                    e.preventDefault();
-
-                                    handleSend();
-
-                                }
-
-                            }}
-
-                           className="
-flex-1
-
-bg-transparent
-
-border-0
-
-outline-none
-
-px-3
-
-text-[15px]
-sm:text-base
-
-placeholder:text-gray-400
-
-focus:outline-none
-"
-                        />
+        bg-white
+    "
+/>
 
                         {/* Send */}
 
