@@ -791,50 +791,66 @@ function Chat() {
     className="
         w-full
         h-screen
-        sm:max-w-6xl
-        sm:mx-auto
-        sm:px-4
+        lg:h-[calc(100vh-70px)]
+
+        max-w-screen-2xl
+        mx-auto
+
         px-0
+        sm:px-3
+        lg:px-6
     "
     onClick={closeReactionPicker}
 >
 
-            <div
+           <div
     className="
         bg-white
+
         h-full
         flex
         flex-col
+
         overflow-hidden
 
         rounded-none
 
-        sm:rounded-3xl
-        sm:shadow-2xl
-        sm:h-[84vh]
+        sm:rounded-2xl
+        lg:rounded-3xl
+
+        shadow-none
+        lg:shadow-2xl
     "
 >
 
                 {/* ================= HEADER ================= */}
 
-                <div className="
-bg-gradient-to-r
-from-pink-600
-to-rose-500
-text-white
+                <div
+    className="
+        sticky
+        top-0
+        z-20
 
-px-3
-sm:px-6
+        bg-gradient-to-r
+        from-pink-600
+        to-rose-500
 
-py-3
-sm:py-4
+        text-white
 
-flex
-items-center
-justify-between
+        px-3
+        sm:px-6
 
-shadow-md
-">
+        py-3
+        sm:py-4
+
+        flex
+        items-center
+        justify-between
+
+        shadow-lg
+        backdrop-blur
+    "
+>
 
                     <div className="flex items-center gap-4">
 
@@ -935,7 +951,28 @@ border-white
 
                 {/* ================= MESSAGES ================= */}
 
-                <div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50 via-white to-pink-50 px-3 sm:px-6 py-6 space-y-5">
+<div
+    className="
+        flex-1
+
+        overflow-y-auto
+
+        bg-gradient-to-b
+        from-pink-50
+        via-white
+        to-pink-50
+
+        px-3
+        sm:px-5
+        lg:px-8
+
+        py-4
+
+        space-y-4
+
+        scroll-smooth
+    "
+>
 
                     {
 
@@ -947,11 +984,32 @@ border-white
 
                                 <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
 
-                                    <div className="text-6xl mb-4">
+                                    <div
+    className="
+        w-24
+        h-24
 
-                                        💬
+        rounded-full
 
-                                    </div>
+        bg-pink-100
+
+        flex
+
+        items-center
+
+        justify-center
+
+        text-5xl
+
+        shadow-md
+
+        mb-5
+    "
+>
+
+    💬
+
+</div>
 
                                     <h2 className="text-2xl font-bold">
 
@@ -979,63 +1037,68 @@ border-white
 
                                         (msg.sender?._id || msg.sender) === currentUser.id;
 
+                                        const currentDate = new Date(msg.createdAt).toDateString();
+
+const previousDate =
+    messages.indexOf(msg) > 0
+        ? new Date(
+              messages[messages.indexOf(msg) - 1].createdAt
+          ).toDateString()
+        : null;
+
+const showDate = currentDate !== previousDate;
+
                                     return (
+                                        
 
-                                        <div
+    <div
 
-                                            key={msg._id}
+    key={msg._id}
 
-                                            onContextMenu={(e) =>
+    onContextMenu={(e) =>
+        openReactionPicker(e, msg._id)
+    }
 
-                                                openReactionPicker(
+    className={`
 
-                                                    e,
+        flex
 
-                                                    msg._id
+        ${
+            mine
+                ? "justify-end"
+                : "justify-start"
+        }
 
-                                                )
+        animate-[fadeIn_.25s_ease]
 
-                                            }
-
-                                            className={`flex ${
-
-                                                mine
-
-                                                    ? "justify-end"
-
-                                                    : "justify-start"
-
-                                            }`}
-
-                                        >
+    `}
+>
 
                                             <div
 
-                                                className={`
+                                               className={`
 max-w-[92%]
-sm:max-w-md
+sm:max-w-[80%]
+lg:max-w-[72%]
+xl:max-w-[65%]
 
 rounded-3xl
 
 px-4
-sm:px-5
+sm:px-6
 
-py-2
-sm:py-3
+py-3.5
 
 shadow-md
 transition
 hover:shadow-lg
 
 ${
-
-                                                    mine
-
-                                                        ? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
-
-                                                        : "bg-white rounded-bl-md"
-
-                                                }`}
+    mine
+        ? "bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-md"
+        : "bg-white rounded-bl-md"
+}
+`}
 
                                             >
 
@@ -1046,35 +1109,37 @@ ${
                                                     msg.image && (
 
                                                         <img
+    src={getImageUrl(msg.image)}
+    alt="Message"
+    onClick={() =>
+        setFullscreenImage(
+            getImageUrl(msg.image)
+        )
+    }
+    className="
+        rounded-2xl
 
-                                                            src={getImageUrl(msg.image)}
+        w-full
 
-                                                            alt="Message"
+        max-w-[340px]
+        lg:max-w-[420px]
 
-                                                            onClick={() =>
+        max-h-[420px]
 
-                                                                setFullscreenImage(
+        object-cover
 
-                                                                    getImageUrl(msg.image)
+        cursor-pointer
 
-                                                                )
+        hover:scale-[1.02]
 
-                                                            }
+        transition-all
+        duration-300
 
-                                                            className="
-rounded-2xl
-mb-3
+        shadow-lg
 
-w-full
-max-w-[260px]
-sm:max-w-xs
-
-cursor-pointer
-hover:scale-105
-transition
-shadow-lg
-"
- />
+        mb-3
+    "
+/>
 
                                                     )
 
@@ -1160,7 +1225,18 @@ sm:text-base
 
                                                     msg.message && (
 
-                                                        <p className="leading-relaxed break-words text-[15px] sm:text-base">
+                                                        <p
+    className="
+        leading-7
+
+        break-words
+
+        whitespace-pre-wrap
+
+        text-[15px]
+        sm:text-[16px]
+    "
+>
 
                                                             {msg.message}
 
@@ -1219,73 +1295,34 @@ shadow
 
                                                 {/* TIME + READ RECEIPTS */}
 
-                                               <div className="flex justify-between items-center mt-2">
+                                               <div className="flex justify-end items-center gap-2 mt-2">
 
-                                                    <p
+    <span
+        className={`text-[11px] ${
+            mine
+                ? "text-pink-100"
+                : "text-gray-400"
+        }`}
+    >
+        {new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        })}
+    </span>
 
-                                                        className={`text-xs ${
+    {mine && (
+        msg.read ? (
+            <FaCheckDouble
+                className="text-sky-300 text-xs"
+            />
+        ) : (
+            <FaCheck
+                className="text-pink-100 text-xs"
+            />
+        )
+    )}
 
-                                                            mine
-
-                                                                ? "text-pink-100"
-
-                                                                : "text-gray-400"
-
-                                                        }`}
-
-                                                    >
-
-                                                        {
-
-                                                            new Date(
-
-                                                                msg.createdAt
-
-                                                            ).toLocaleTimeString(
-
-                                                                [],
-
-                                                                {
-
-                                                                    hour: "2-digit",
-
-                                                                    minute: "2-digit"
-
-                                                                }
-
-                                                            )
-
-                                                        }
-
-                                                    </p>
-
-                                                    {
-
-                                                        mine && (
-
-                                                            msg.read
-
-                                                                ?
-
-                                                                <FaCheckDouble
-
-                                                                    className="text-sky-300 text-xs"
-
-                                                                />
-
-                                                                :
-
-                                                                <FaCheck
-
-                                                                    className="text-pink-100 text-xs"
-
-                                                                />
-
-                                                        )
-
-                                                    }
-
-                                                </div>
+</div>
 
                                             </div>
 
@@ -1327,7 +1364,21 @@ text-sm
 "
 >
 
-                                    💬 {user?.firstName} is typing...
+                                    <div className="flex items-center gap-2">
+
+    <span className="text-pink-500">
+
+        ●
+
+    </span>
+
+    <span>
+
+        {user?.firstName} is typing...
+
+    </span>
+
+</div>
 
                                 </div>
 
@@ -1523,30 +1574,45 @@ gap-3
 
                 />
 
-                {/* ================= INPUT AREA ================= */}
+               {/* ================= INPUT AREA ================= */}
 
-                <div className="
-border-t
+<div
+    className="
+        border-t
+        bg-white
 
-bg-white
+        px-3
+        sm:px-5
+        lg:px-6
 
-px-2
-sm:px-5
+        py-3
 
-py-2
-sm:py-4
-">
+        shadow-[0_-2px_12px_rgba(0,0,0,0.04)]
+    "
+>
 
-                    <div className="
-relative
+                   <div
+    className="
+        flex
+        items-center
 
-flex
-items-center
+        gap-2
 
-gap-2
-sm:gap-3
-">
+        bg-gray-50
 
+        rounded-full
+
+        border
+
+        px-2
+        py-2
+
+        focus-within:border-pink-400
+        focus-within:bg-white
+
+        transition
+    "
+>
                         {/* Emoji */}
 
                         <div className="relative ">
@@ -1748,7 +1814,24 @@ shadow-sm
 
                             }}
 
-                            className="flex-1 min-w-0 border-2 border-pink-200 rounded-full px-4 py-2 sm:py-3 focus:outline-none focus:border-pink-500 transition"
+                           className="
+flex-1
+
+bg-transparent
+
+border-0
+
+outline-none
+
+px-3
+
+text-[15px]
+sm:text-base
+
+placeholder:text-gray-400
+
+focus:outline-none
+"
                         />
 
                         {/* Send */}
@@ -1769,14 +1852,11 @@ shadow-sm
 
                             }
 
-                            className={`
+                           className={`
+w-11
+h-11
+
 rounded-full
-
-w-10
-h-10
-
-sm:w-12
-sm:h-12
 
 flex
 items-center
@@ -1785,25 +1865,17 @@ justify-center
 transition-all
 duration-300
 
-shadow-lg ${
+shadow-md
 
-                                text.trim() ||
-
-                                selectedImage ||
-
-                                voiceBlob ||
-
-                                selectedFile
-
-                                    ?
-
-                                    "bg-pink-600 hover:bg-pink-700 hover:scale-105 text-white"
-
-                                    :
-
-                                    "bg-gray-300 text-gray-500 cursor-not-allowed"
-
-                            }`}
+${
+    text.trim() ||
+    selectedImage ||
+    voiceBlob ||
+    selectedFile
+        ? "bg-pink-600 hover:bg-pink-700 hover:scale-105 text-white"
+        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+}
+`}
 
                         >
 
