@@ -133,7 +133,8 @@ function Navbar() {
 
                         <NotificationBell />
 
-                        <button
+                       <button
+    onClick={() => setMenuOpen(!menuOpen)}
     className="
         bg-pink-600
         hover:bg-pink-700
