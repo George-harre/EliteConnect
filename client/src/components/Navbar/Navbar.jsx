@@ -134,26 +134,21 @@ function Navbar() {
                         <NotificationBell />
 
                         <button
-                            onClick={() =>
-                                setMenuOpen(!menuOpen)
-                            }
-                            className="text-2xl text-pink-600"
-                        >
+    className="
+        bg-pink-600
+        hover:bg-pink-700
 
-                            {
+        text-white
 
-                                menuOpen ?
+        rounded-lg
 
-                                <FaTimes />
+        p-3
 
-                                :
-
-                                <FaBars />
-
-                            }
-
-                        </button>
-
+        transition
+    "
+>
+    <FaBars className="text-xl text-white" />
+</button>
                     </div>
 
                 </div>
