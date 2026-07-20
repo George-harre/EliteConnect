@@ -558,18 +558,18 @@ function Dashboard() {
                 Developer Signature
             ========================== */}
 
-            <div className="mt-20 mb-6 text-center text-gray-400">
+           // <div className="mt-20 mb-6 text-center text-gray-400">
 
                 <div className="text-lg tracking-[0.35em]">
                     ────────────
                 </div>
 
                 <p className="mt-4 text-sm uppercase tracking-[0.2em]">
-                    Designed &amp; Developed by
+                    Designed &amp; Developed 
                 </p>
 
                 <h3 className="mt-2 text-xl font-normal tracking-[0.15em] text-gray-500">
-                    George H. Ruwa
+                    G.H.R
                 </h3>
 
             </div>

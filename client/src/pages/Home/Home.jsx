@@ -191,8 +191,8 @@ function Home() {
                     </p>
 
                     <p className="mt-5 text-sm text-gray-500">
-                        © 2026 EliteConnect • Made with ❤️ in Kenya
-                    </p>
+                        © 2026 EliteConnect • Made with ❤️ 
+                                           </p>
 
                 </div>
 
